@@ -8,8 +8,8 @@ import { waitForLoad } from "./playpen";
 import * as load from './load';
 
 // Import all modules that listen for tabChange events, so electrobun can package them, and all top-level code is ran.
-import './createSpace';
-import './selectSpace';
+import './tabs/createSpace';
+import './tabs/selectSpace';
 
 // Import CSS files
 import '../sheets/index.css';

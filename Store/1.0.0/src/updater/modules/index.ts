@@ -20,12 +20,11 @@ const rpc = Electroview.defineRPC<UpdaterRPCType>({
 });
 let electroview: Electroview<typeof rpc>;
 
-function getEBD(id: string) {return document.getElementById(id)}
 function wait(ms: number) {return new Promise((resolve) => { setTimeout(resolve, ms)})}
 
 async function displayDebug(message: string, type = '') {
     console.log(`Display Debug Function Recieved: ${message}, ${type}`);
-    const outputElement = getEBD('debug-output') as HTMLSpanElement;
+    const outputElement = document.getElementById('debug-output') as HTMLSpanElement;
 
     const messageElement = document.createElement('span') as HTMLElement;
     messageElement.className = type;
@@ -34,7 +33,7 @@ async function displayDebug(message: string, type = '') {
     outputElement?.replaceChildren(messageElement);
 
     if (type === 'error') {
-        const loader = getEBD('loader');
+        const loader = document.getElementById('loader');
         // Remove loader to indicate a fatal error, and that the app is no longer loading and will not progress further.
         loader?.parentNode?.removeChild(loader);
         const message = 'Execution halted due to a fatal error.';
@@ -44,7 +43,7 @@ async function displayDebug(message: string, type = '') {
 }
 
 async function init() {
-    const quitBtn = getEBD('quitBtn');
+    const quitBtn = document.getElementById('quitBtn');
 
     quitBtn?.addEventListener('click', () => {
         electroview.rpc?.request.close();

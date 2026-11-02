@@ -1,4 +1,4 @@
-import { preferences } from "./settings";
+import { preferences } from "./playpenPreferences";
 import { ColorPicker, PopupPlacer } from "./playpen";
 
 interface NotificationItem {
@@ -34,7 +34,7 @@ export type ValidInputType =
     | "range"
     | "color";
 
-export type PopupType = "options" | "select" | ValidInputType;
+export type PopupType = "options" | "select" | "radio" | ValidInputType;
 
 export interface PopupInputAttributes {
     placeholder?: string;
@@ -65,7 +65,7 @@ export function showNotification(
     sticky: boolean = type === "error"
 ): void {
     queue.push({ message, type, duration, sticky });
-    
+
     if (!isProcessing) {
         processQueue();
     }
@@ -76,10 +76,10 @@ async function processQueue(): Promise<void> {
         isProcessing = false;
         return;
     }
-    
+
     isProcessing = true;
     const current = queue.shift()!;
-    
+
     await renderNotification(current);
     processQueue();
 }
@@ -95,54 +95,54 @@ function renderNotification(item: NotificationItem): Promise<void> {
         const title = document.createElement("span");
         title.className = "notification-title";
         title.textContent = `${item.type[0].toUpperCase()}${item.type.slice(1)}`;
-        
+
         const messageOutput = document.createElement("p");
         messageOutput.className = "notification-message";
         messageOutput.textContent = item.message;
-        
+
         const closeBtn = document.createElement("button");
         closeBtn.className = "notification-close";
         closeBtn.innerHTML = "&times;";
-        
+
         header.append(title, closeBtn);
         container.append(header, messageOutput);
-        
+
         if (preferences['transitionAnimations']) {
             container.style.animation = "playpenFadeIn 0.3s var(--transition-easing-style, ease-out) forwards";
         }
         document.body.appendChild(container);
-        
+
         let dismissTimer: number | null = null;
         let isDismissed = false;
-        
+
         const dismiss = (event?: MouseEvent) => {
             if (isDismissed) return;
-            
+
             if (event && event.shiftKey) {
                 queue.length = 0;
             }
-            
+
             isDismissed = true;
-            
+
             if (dismissTimer !== null) {
                 clearTimeout(dismissTimer);
             }
-            
+
             if (!preferences['transitionAnimations']) {
                 container.remove();
                 resolve();
                 return;
             }
-            
+
             container.style.animation = "playpenFadeOut 0.25s var(--transition-easing-style, ease-out) forwards";
             container.addEventListener("animationend", () => {
                 container.remove();
                 resolve();
             }, { once: true });
         };
-        
+
         closeBtn.addEventListener("click", (event) => dismiss(event));
-        
+
         if (!item.sticky) {
             dismissTimer = window.setTimeout(() => dismiss(), item.duration);
         }
@@ -150,6 +150,7 @@ function renderNotification(item: NotificationItem): Promise<void> {
 }
 
 let dismissActivePopup: (() => void) | null = null;
+let popupRadioGroupId = 0;
 
 export function showPopup<T = any>(
     title: string,
@@ -172,7 +173,7 @@ export function showPopup<T = any>(
     return new Promise((resolve) => {
         const popupContainer = document.createElement("div");
         popupContainer.className = "popup-container";
-        
+
         const popup = document.createElement("div");
         popup.className = "popup";
 
@@ -183,19 +184,43 @@ export function showPopup<T = any>(
         titleOutput.className = "popup-title";
         titleOutput.textContent = title;
         titleBar.appendChild(titleOutput);
-        
+
         const messageContainer = document.createElement("div");
         messageContainer.className = "message-container";
-        
+
         const span = document.createElement("span");
         span.innerHTML = message;
         messageContainer.appendChild(span);
-        
+
         let inputElement: HTMLInputElement | HTMLSelectElement | null = null;
         let colorPickerInstance: ColorPicker | null = null;
-        
+        let radioValue: unknown;
+
         if (type !== "options") {
-            if (type === "select") {
+            if (type === "radio") {
+                const radioGroup = document.createElement("fieldset");
+                radioGroup.className = "popup-radio-group";
+                const radioName = `popup-radio-${++popupRadioGroupId}`;
+
+                options.forEach(option => {
+                    const label = document.createElement("label");
+                    const radio = document.createElement("input");
+                    const optionLabel = document.createElement("span");
+                    radio.type = "radio";
+                    radio.name = radioName;
+                    radio.value = String(option.value);
+                    radio.checked = Object.is(option.value, inputProps.value);
+                    if (radio.checked) radioValue = option.value;
+                    radio.addEventListener("change", () => {
+                        if (radio.checked) radioValue = option.value;
+                    });
+                    optionLabel.textContent = option.content;
+                    label.append(radio, optionLabel);
+                    radioGroup.appendChild(label);
+                    inputElement ??= radio;
+                });
+                messageContainer.appendChild(radioGroup);
+            } else if (type === "select") {
                 const selectElement = document.createElement("select");
                 inputProps.selectOptions?.forEach(option => {
                     selectElement.add(new Option(option, option));
@@ -212,7 +237,8 @@ export function showPopup<T = any>(
                 inputElement.className = "playpen-input";
             }
 
-            if (type !== "color") {
+            if (!inputElement) throw new Error(`Could not create the "${type}" popup input.`);
+            if (type !== "color" && type !== "radio") {
                 Object.entries(inputProps).forEach(([key, val]) => {
                     if (key !== "selectOptions" && val !== undefined && val !== null) {
                         if (typeof val === "boolean") inputElement!.toggleAttribute(key, val);
@@ -220,14 +246,29 @@ export function showPopup<T = any>(
                     }
                 });
                 if (inputProps.value !== undefined && inputElement) inputElement.value = String(inputProps.value);
-                messageContainer.appendChild(inputElement);
+                if (type === "range" && inputElement instanceof HTMLInputElement) {
+                    const rangeInput = inputElement;
+                    const rangeControl = document.createElement("div");
+                    rangeControl.className = "popup-range-control";
+                    const valueOutput = document.createElement("output");
+                    valueOutput.value = rangeInput.value;
+                    valueOutput.textContent = rangeInput.value;
+                    rangeInput.addEventListener("input", () => {
+                        valueOutput.value = rangeInput.value;
+                        valueOutput.textContent = rangeInput.value;
+                    });
+                    rangeControl.append(rangeInput, valueOutput);
+                    messageContainer.appendChild(rangeControl);
+                } else {
+                    messageContainer.appendChild(inputElement);
+                }
             }
         }
-        
+
         const actionContainer = document.createElement("div");
         actionContainer.className = "action-container";
         let highlightedButton: HTMLButtonElement | null = null;
-        
+
         const transitionAnimations = preferences['transitionAnimations'];
         let isClosing = false;
         let outsidePointerDown: ((event: PointerEvent) => void) | null = null;
@@ -245,7 +286,7 @@ export function showPopup<T = any>(
                 outsidePointerDown = null;
             }
         };
-        
+
         const closePopup = (selectedValue: any, immediately = false) => {
             if (immediately || isClosing) {
                 if (!isClosing && immediately) isClosing = true;
@@ -257,14 +298,14 @@ export function showPopup<T = any>(
             }
             isClosing = true;
             removeOutsideListener();
-            
+
             if (!transitionAnimations) {
                 popupContainer.remove();
                 clearActivePopup();
                 resolve(selectedValue as T | undefined);
                 return;
             }
-            
+
             const isShaded = popupContainer.classList.contains("popup-container-shaded");
             const finishClose = () => {
                 popupContainer.remove();
@@ -294,16 +335,23 @@ export function showPopup<T = any>(
 
         dismissThisPopup = () => closePopup(undefined, true);
         dismissActivePopup = dismissThisPopup;
-        
-        const effectiveOptions = (type !== "options" && options.length === 2 && options[0].content === "No" && options[1].content === "Yes")
+
+        const effectiveOptions = type === "radio"
+            ? [
+                { content: "Cancel", value: undefined, highlighted: false },
+                { content: "Set", value: "inputValue", highlighted: true }
+              ]
+            : (type !== "options" && options.length === 2 && options[0].content === "No" && options[1].content === "Yes")
             ? [
                 { content: "Cancel", value: undefined, highlighted: false },
                 { content: "Set", value: "inputValue", highlighted: true }
               ]
             : options;
 
-        const getSelectedInputValue = () => 
-            inputElement instanceof HTMLInputElement && inputElement.type === "file"
+        const getSelectedInputValue = () =>
+            type === "radio"
+                ? radioValue
+                : inputElement instanceof HTMLInputElement && inputElement.type === "file"
                 ? inputElement.files
                 : inputElement?.value;
 
@@ -321,7 +369,7 @@ export function showPopup<T = any>(
             btn.textContent = opt.content;
             btn.className = opt.highlighted ? "playpen-primary-button primary" : "playpen-primary-button";
             if (opt.highlighted) highlightedButton = btn;
-            
+
             btn.addEventListener("click", () => handleOptionSelection(opt.value));
             actionContainer.appendChild(btn);
         });
@@ -330,14 +378,14 @@ export function showPopup<T = any>(
             inputElement.addEventListener("keydown", (e) => {
                 if (e.key === "Enter" && !["select", "range", "color"].includes(type)) {
                     e.preventDefault();
-                    const targetOpt = effectiveOptions.find(o => o.highlighted && o.value === "inputValue") || 
+                    const targetOpt = effectiveOptions.find(o => o.highlighted && o.value === "inputValue") ||
                                       effectiveOptions.find(o => o.value === "inputValue") ||
                                       effectiveOptions[effectiveOptions.length - 1];
                     handleOptionSelection(targetOpt?.value);
                 }
             });
         }
-        
+
         popup.appendChild(titleBar);
         popup.appendChild(messageContainer);
         popup.appendChild(actionContainer);
@@ -346,7 +394,7 @@ export function showPopup<T = any>(
 
         // Position using either center fallback or external placer
         if (center) {
-            popupContainer.classList.add("center", "popup-container-shaded");
+            popupContainer.classList.add("center", "popup-container-shaded", "standalone");
         } else {
             PopupPlacer.place(popupContainer, popup, anchor);
         }
@@ -365,7 +413,7 @@ export function showPopup<T = any>(
                 popupContainer.style.animation = "popupContainerFadeIn 0.3s var(--transition-easing-style, ease-out) forwards";
             }
         }
-        
+
         requestAnimationFrame(() => {
             if (isClosing || !popupContainer.isConnected) return;
             if (highlightedButton) {

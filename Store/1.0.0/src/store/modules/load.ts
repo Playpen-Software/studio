@@ -1,4 +1,4 @@
-import * as settings from './settings';
+import * as settings from './playpenPreferences';
 import * as tabs from './tabs';
 import * as index from './index';
 import * as spaceFillers from './spaceFillers';
@@ -8,16 +8,12 @@ import { initTooltips } from './tooltips';
 import { electroview } from './index';
 import { populateSVGs } from "./fileLoader";
 
-function getEBD<T extends HTMLElement = HTMLElement>(id: string): T {
-    return document.getElementById(id) as T;
-}
-
 let delayTimeout: any;
 
-const versionLabel = getEBD<HTMLSpanElement>('load-footer-version');
-const exitBtn = getEBD<HTMLButtonElement>('load-exit');
-const restartBtn = getEBD<HTMLButtonElement>('load-restart');
-const skipDelayBtn = getEBD<HTMLButtonElement>('load-skipDelay');
+const versionLabel = document.getElementById('load-footer-version') as HTMLSpanElement;
+const exitBtn = document.getElementById('load-exit') as HTMLButtonElement;
+const restartBtn = document.getElementById('load-restart') as HTMLButtonElement;
+const skipDelayBtn = document.getElementById('load-skipDelay') as HTMLButtonElement;
 
 let isFinishing = false;
 let initialization: Promise<void> | null = null;
@@ -34,6 +30,9 @@ export function init(): Promise<void> {
 
 async function initialize() {
     versionLabel!.innerText = `v${index.store.sessionVersion}` || "Failed to get session version";
+
+    const context = window as any;
+    context.exposeDevFunctions = index.exposeDevFunctions;
 
     initTooltips();
 
@@ -112,6 +111,8 @@ async function initialize() {
 async function finishLoading() {
     if (isFinishing) return;
     isFinishing = true;
+
+    window.dispatchEvent(new CustomEvent('storeLoaded'));
 
     tabs.goto('selectSpace', { logPrevious: false, removePrevious: true });
 }

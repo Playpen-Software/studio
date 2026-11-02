@@ -16,10 +16,10 @@
 			<div class="playpen-loader"></div>
 		</div>
 		<div class="playpen-horizontal-navigation transparent">
-			<button class="playpen-primary-button" id="load-exit">Exit</button>
-			<button class="playpen-primary-button" id="load-restart">Restart</button>
+			<button class="playpen-primary-button" id="load-exit"><svgPlaceholder>assets/svg/selectSpace/exit.svg</svgPlaceholder>Exit</button>
+			<button class="playpen-primary-button" id="load-restart"><svgPlaceholder>assets/svg/selectSpace/refresh.svg</svgPlaceholder>Restart</button>
 			<div class="filler"></div>
-			<button class="playpen-primary-button hidden" id="load-skipDelay">Skip Load Delay</button>
+			<button class="playpen-primary-button hidden" id="load-skipDelay"><svgPlaceholder>assets/svg/load/skip.svg</svgPlaceholder>Skip Load Delay</button>
 		</div>
 		<div class="playpen-footer">
 			<span>Store </span><span id="load-footer-version">vX.X.X</span><span> | &copy; 2026 Playpen Software. All rights reserved.</span>
@@ -30,22 +30,17 @@
 		<div class="action-container">
 			<h2 class="playpen-bookmark">General</h2>
 
-			<button class="playpen-secondary-button"
-			data-tab-navigation="settings"><svgPlaceholder>assets/svg/selectSpace/settings.svg</svgPlaceholder>Settings</button>
-			<button id="selectSpace-webpage" class="playpen-secondary-button"><svgPlaceholder>assets/svg/products/studio-nofill-monochrome.svg</svgPlaceholder>Studio Webpage</button>
+			<button class="playpen-secondary-button" data-tab-navigation="settings"><svgPlaceholder>assets/svg/selectSpace/settings.svg</svgPlaceholder>Settings</button>
+			<button id="selectSpace-website" class="playpen-secondary-button"><svgPlaceholder>assets/svg/products/studio-nofill-monochrome.svg</svgPlaceholder>Studio Webpage</button>
 
-			<button class="playpen-secondary-button"
-			data-tab-navigation="settings_general"><svgPlaceholder>assets/svg/selectSpace/toggleShapeAnimations.svg</svgPlaceholder>Toggle Shape Animation</button>
+			<button class="playpen-secondary-button" data-tab-navigation="settings_general"><svgPlaceholder>assets/svg/selectSpace/toggleShapeAnimations.svg</svgPlaceholder>Toggle Shape Animation</button>
 
 			<button id="selectSpace-restart" class="playpen-secondary-button"><svgPlaceholder>assets/svg/selectSpace/refresh.svg</svgPlaceholder>Restart Store</button>
 			<button id="selectSpace-exit" class="playpen-secondary-button"><svgPlaceholder>assets/svg/selectSpace/exit.svg</svgPlaceholder>Exit Store</button>
 
 			<h2 class="playpen-bookmark">Advanced</h2>
 
-			<button class="playpen-secondary-button tooltip-support-button tip-right"
-			data-tooltip-content="This feature will be available soon."
-			data-tab-navigation="connectDatabase"
-			disabled><svgPlaceholder>assets/svg/selectSpace/database.svg</svgPlaceholder>Connect to Remote Database</button>
+			<button class="playpen-secondary-button tooltip-support-button tip-right" data-tooltip-content="This feature will be available soon." data-tab-navigation="connectDatabase" disabled><svgPlaceholder>assets/svg/selectSpace/database.svg</svgPlaceholder>Connect to Remote Database</button>
 
 			<button id="selectSpace-issues" class="playpen-secondary-button"><svgPlaceholder>assets/svg/selectSpace/issue.svg</svgPlaceholder>Report a Problem</button>
 
@@ -57,12 +52,10 @@
 			<div id="selectSpace-list"></div>
 			<div class="playpen-horizontal-navigation">
 				<input id="selectSpace-search" type="search" class="playpen-input filler" placeholder="Search Spaces" aria-label="Search spaces">
-				<button class="playpen-primary-button tooltip-support-button tip-top"
-				data-tooltip-content="A &quot;Space&quot; is like a location. Each Space contains its own categories and items. Examples include &quot;Office&quot; and &quot;Warehouse&quot;.">What is a space?</button>
+				<button class="playpen-primary-button tooltip-support-button tip-top" data-tooltip-content="A &quot;Space&quot; is like a location. Each Space contains its own categories and items. Examples include &quot;Office&quot; and &quot;Warehouse&quot;."><svgPlaceholder>assets/svg/selectSpace/info.svg</svgPlaceholder>What is a space?</button>
 
-				<button id="selectSpace-refresh" class="playpen-primary-button">Refresh</button>
-				<button id="selectSpace-create" class="playpen-primary-button primary"
-				data-tab-navigation="createSpace">Create New Space</button>
+				<button id="selectSpace-refresh" class="playpen-primary-button"><svgPlaceholder>assets/svg/selectSpace/refresh.svg</svgPlaceholder>Refresh</button>
+				<button id="selectSpace-create" class="playpen-primary-button primary" data-tab-navigation="createSpace"><svgPlaceholder>assets/svg/selectSpace/create.svg</svgPlaceholder>Create New Space</button>
 			</div>
 		</div>
 	</div>
@@ -79,15 +72,11 @@
 					<input id="createSpace-icon-input" type="file" accept="image/png, image/jpeg, image/gif, image/webp, image/svg+xml, image/avif, image/bmp, image/x-icon" hidden>
 				</div>
 				<button id="createSpace-continue" class="playpen-primary-button" type="submit">Create Space</button>
-				<button class="playpen-primary-button tooltip-support-button tip-right" type="button"
-				data-tooltip-content="A &quot;Space&quot; is like a location. Each Space contains its own categories and items. Examples include &quot;Office&quot; and &quot;Warehouse&quot;.">What is a space?</button>
+				<button class="playpen-primary-button tooltip-support-button tip-right" type="button" data-tooltip-content="A &quot;Space&quot; is like a location. Each Space contains its own categories and items. Examples include &quot;Office&quot; and &quot;Warehouse&quot;.">What is a space?</button>
 				<hr>
-				<button id="createSpace-import" class="playpen-primary-button tooltip-support-button tip-right" disabled
-				data-tooltip-content="This feature will be available soon.">Import from file</button>
-				<button id="createSpace-convert" class="playpen-primary-button tooltip-support-button tip-right" disabled
-				data-tooltip-content="This feature will be available soon.">Import from old inventory</button>
-				<button id="createSpace-cancel" class="playpen-secondary-button"
-				data-tab-navigation="previous, selectSpace">Cancel</button>
+				<button id="createSpace-import" class="playpen-primary-button tooltip-support-button tip-right" disabled data-tooltip-content="This feature will be available soon.">Import from file</button>
+				<button id="createSpace-convert" class="playpen-primary-button tooltip-support-button tip-right" disabled data-tooltip-content="This feature will be available soon.">Import from old inventory</button>
+				<button id="createSpace-cancel" class="playpen-secondary-button" data-tab-navigation="previous, selectSpace">Cancel</button>
 			</form>
 			<p id="createSpace-output" role="status"></p>
 		</section>
@@ -96,25 +85,13 @@
 	<div id="settings" class="tab" data-tab-display="flex">
 		<div class="playpen-horizontal-navigation divider-bottom">
 			<div class="navigation-buttons">
-				<button class="playpen-primary-button"
-				data-tab-navigation="settings_general"
-				data-tab-log-previous="false"
-				data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/tabs/general.svg</svgPlaceholder>General</button>
+				<button class="playpen-primary-button" data-tab-navigation="settings_general" data-tab-log-previous="false" data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/general.svg</svgPlaceholder>General</button>
 
-				<button class="playpen-primary-button"
-				data-tab-navigation="settings_advanced"
-				data-tab-log-previous="false"
-				data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/tabs/advanced.svg</svgPlaceholder>Advanced</button>
+				<button class="playpen-primary-button" data-tab-navigation="settings_advanced" data-tab-log-previous="false" data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/advanced.svg</svgPlaceholder>Advanced</button>
 
-				<button class="playpen-primary-button"
-				data-tab-navigation="settings_performance"
-				data-tab-log-previous="false"
-				data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/tabs/performance.svg</svgPlaceholder>Performance</button>
+				<button class="playpen-primary-button" data-tab-navigation="settings_performance" data-tab-log-previous="false" data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/performance.svg</svgPlaceholder>Performance</button>
 
-				<button class="playpen-primary-button"
-				data-tab-navigation="settings_theme"
-				data-tab-log-previous="false"
-				data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/tabs/theme.svg</svgPlaceholder>Theme Editor</button>
+				<button class="playpen-primary-button" data-tab-navigation="settings_theme" data-tab-log-previous="false" data-active-tab-highlight="true"><svgPlaceholder>assets/svg/settings/theme.svg</svgPlaceholder>Theme Editor</button>
 			</div>
 		</div>
 		<div class="main-container">
@@ -124,25 +101,20 @@
 					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-spaceFillersEnabled"
-						data-preferences-key="spaceFillersEnabled">
+						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-spaceFillersEnabled" data-preferences-key="spaceFillersEnabled" data-preference-default="true">
 
 						<label for="settings-spaceFillersEnabled">Space Fillers</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="&quot;Space Fillers&quot; are the shapes in the background that make the app feel more lively and fill empty white space. Enabling this option can negatively impact performance on lower end devices.">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="&quot;Space Fillers&quot; are the shapes in the background that make the app feel more lively and fill empty white space. Enabling this option can negatively impact performance on lower end devices.">i</button>
 					</div>
 
 					<span class="playpen-label">Animations</span>
 					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input id="settings-toggleShapeAnimations" class="playpen-input playpen-toggle" type="checkbox"
-						data-preferences-key="spaceFillerAnimations"
-						data-depends="settings-spaceFillersEnabled:checked">
+						<input id="settings-toggleShapeAnimations" class="playpen-input playpen-toggle" type="checkbox" data-preferences-key="spaceFillerAnimations" data-preference-default="true" data-depends="settings-spaceFillersEnabled:checked">
 
 						<label for="settings-toggleShapeAnimations">Space Filler Floating Animation</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="If you look closely, some of the Space Filler shapes are lightly moving around. This can make some people motion sick, or negatively impact performance on lower end devices. This option toggles that effect.">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="If you look closely, some of the Space Filler shapes are lightly moving around. This can make some people motion sick, or negatively impact performance on lower end devices. This option toggles that effect.">i</button>
 					</div>
 
 					<span class="playpen-label">Miscellaneous</span>
@@ -150,11 +122,9 @@
 
 					<span class="playpen-checkbox-wrapper">
 						<label for="settings-loadMenuDelay">Load Menu Delay: </label>
-						<input class="playpen-input" type="number" min="0" id="settings-loadMenuDelay" placeholder="Menu Delay (ms)"
-						data-preferences-key="loadMenuDelay">
+						<input class="playpen-input" type="number" min="0" id="settings-loadMenuDelay" placeholder="Menu Delay (ms)" data-preferences-key="loadMenuDelay" data-preference-default="750">
 
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="The menu delay is how long the load menu shows after the app has finished loading. This value is in milleseconds. Default is 750. (0.75 seconds)">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="The menu delay is how long the load menu shows after the app has finished loading. This value is in milleseconds. Default is 750. (0.75 seconds)">i</button>
 					</span>
 				</div>
 				<div id="settings_advanced" class="tab" data-tab-display="flex">
@@ -162,13 +132,18 @@
 					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-updateSpaceFillersOnTabChange"
-						data-depends="settings-spaceFillersEnabled:checked"
-						data-preferences-key="updateSpaceFillersOnTabChange">
+						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-updateSpaceFillersOnTabChange" data-depends="settings-spaceFillersEnabled:checked" data-preferences-key="updateSpaceFillersOnTabChange" data-preference-default="true">
 
 						<label for="settings-updateSpaceFillersOnTabChange">Update Space Fillers on Tab Change</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="Change the background shapes every time you change tabs.">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="Change the background shapes every time you change tabs.">i</button>
+					</div>
+
+					<span class="playpen-label">Developers</span>
+					<hr>
+
+					<div class="playpen-checkbox-wrapper">
+						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-enableDeveloperFeatures" data-preferences-key="enableDeveloperFeatures" data-preference-default="false">
+						<label for="settings-enableDeveloperFeatures">Enable Developer Features</label>
 					</div>
 				</div>
 				<div id="settings_performance" class="tab" data-tab-display="flex">
@@ -176,68 +151,41 @@
 					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input id="settings-transitionAnimations" class="playpen-input playpen-toggle" type="checkbox"
-						data-preferences-key="transitionAnimations">
+						<input id="settings-transitionAnimations" class="playpen-input playpen-toggle" type="checkbox" data-preferences-key="transitionAnimations" data-preference-default="true">
 
 						<label for="settings-transitionAnimations">Transition Animations</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="Animations like fading, etc. Disabling this option will make all transitions instant. Enabling this option can negatively impact performance on lower end devices.">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="Animations like fading, etc. Disabling this option will make all transitions instant. Enabling this option can negatively impact performance on lower end devices.">i</button>
 					</div>
 
 					<span class="playpen-label">Visual Effects</span>
 					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input type="checkbox" id="settings-useSpaceFillerBlur" class="playpen-input playpen-toggle"
-						data-depends="settings-spaceFillersEnabled:checked"
-						data-preferences-key="useSpaceFillerBlur">
+						<input type="checkbox" id="settings-useSpaceFillerBlur" class="playpen-input playpen-toggle" data-depends="settings-spaceFillersEnabled:checked" data-preferences-key="useSpaceFillerBlur" data-preference-default="true">
 
 						<label for="settings-useSpaceFillerBlur">Use Space Filler Blur</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="When enabled, background shapes will be blurred to blend in. When disabled, shapes will be faded to blend with the background. The faded design improves performance and blends into the background more.">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="When enabled, background shapes will be blurred to blend in. When disabled, shapes will be faded to blend with the background. The faded design improves performance and blends into the background more.">i</button>
 					</div>
 				</div>
 				<div id="settings_theme" class="tab" data-tab-display="flex">
 					<span class="playpen-label">Theme Editor</span>
 					<hr>
-					<div class="theme-profiles">
-						<label for="settings-theme-profile">Theme Profile</label>
-						<select id="settings-theme-profile" class="playpen-input">
-							<option value="">Current theme</option>
-						</select>
-						<div class="theme-profile-actions">
-							<input id="settings-theme-profile-name" class="playpen-input" type="text"
-							maxlength="64" placeholder="New profile name" aria-label="New profile name">
-							<button id="settings-theme-save-profile" class="playpen-primary-button">Save Profile</button>
-						</div>
-						<div class="theme-profile-actions">
-							<button data-input-link="settings-theme-import-file" class="playpen-primary-button">Import Theme</button>
-							<button id="settings-theme-export" class="playpen-primary-button">Export Theme</button>
-							<button id="settings-theme-delete" class="playpen-primary-button">Delete Profile</button>
-							<input id="settings-theme-import-file" type="file" accept=".storetheme,application/json" hidden>
-						</div>
-					</div>
-
-					<hr>
 
 					<div class="playpen-checkbox-wrapper">
-						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-enableDarkThemeSupport"
-						data-preferences-key="enableDarkThemeSupport">
+						<input type="checkbox" class="playpen-input playpen-toggle" id="settings-enableDarkThemeSupport" data-preferences-key="enableDarkThemeSupport" data-preference-default="false">
 
 						<label for="settings-enableDarkThemeSupport">Dark Theme Support</label>
-						<button class="tooltip-button tip-right"
-						data-tooltip-content="If you are using a dark color as the Primary Background color, this option will make elements on top of others lighter instead of darker to maintain contrast (recommended).">i</button>
+						<button class="tooltip-button tip-right" data-tooltip-content="If you are using a dark color as the Primary Background color, this option will make elements on top of others lighter instead of darker to maintain contrast (recommended).">i</button>
 					</div>
 
 					<hr>
 
-					<div id="settings-theme-variables" class="theme-variables"></div>
+					<div id="playpen-themeEditor" class="theme-variables"></div>
 				</div>
 			</div>
 		</div>
 		<div class="playpen-horizontal-navigation divider-top">
-			<button class="playpen-primary-button"
-			data-tab-navigation="previous, selectSpace">Back</button>
+			<button class="playpen-primary-button" data-tab-navigation="previous, selectSpace">Back</button>
 
 			<div class="filler"></div>
 			<button class="playpen-primary-button danger danger-primary" id="settings-reset">Reset...</button>
@@ -246,12 +194,19 @@
 
 	<div id="connectDatabase" class="tab" data-tab-display="flex">
 		<div class="playpen-horizontal-navigation divider-top distribute-contents">
-			<button class="playpen-primary-button"
-			data-tab-navigation="previous, selectSpace">Back</button>
+			<button class="playpen-primary-button" data-tab-navigation="previous, selectSpace">Back</button>
 		</div>
 	</div>
 
-	<div id="workspace" class="tab" data-tab-display="flex"></div>
+	<div id="workspace" class="tab" data-tab-display="flex">
+		<div id="workspace-tabsList">
+			<div class="tabItem">
+				<span class="label">My Space One</span>
+				<button class="closeButton"><svgPlaceholder>assets/svg/workspace/closeTab.svg</svgPlaceholder></button>
+			</div>
+		</div>
+		<button id="workspace-newTab tooltip-support-button tip-right" data-tooltip-content="New Workspace"><svgPlaceholder>assets/svg/workspace/newTab.svg</svgPlaceholder></button>
+	</div>
 
 	<script src="index.js" type="module"></script>
 </body>

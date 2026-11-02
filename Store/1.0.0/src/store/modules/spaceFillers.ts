@@ -1,7 +1,6 @@
-import type { preferenceUpdateEventDetail } from '../../types/store-types';
-import { preferences } from './settings';
+import type { preferenceUpdateEventDetail } from '../../types/setting';
+import { preferences } from './playpenPreferences';
 
-function getEBD(id: string) { return document.getElementById(id); }
 function wait(ms: number) { return new Promise((resolve) => { setTimeout(resolve, ms); }); }
 
 function waitForAnimation(element: HTMLElement, animationsEnabled: boolean, fallbackMs: number = 350): Promise<void> {
@@ -46,7 +45,7 @@ const floatAnimations = ['float', 'float-slow', 'float-fast', 'float-subtle'];
 
 export async function fillSpaceContainer() {
     const callId = ++currentCallId;
-    const container = getEBD('space-filler-container') as HTMLDivElement;
+    const container = document.getElementById('space-filler-container') as HTMLDivElement;
     if (preferences['useSpaceFillerBlur']) {
         container.classList.add('use-blur');
     } else {

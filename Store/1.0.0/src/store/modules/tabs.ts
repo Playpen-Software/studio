@@ -1,8 +1,17 @@
-import { preferences } from './settings';
-import { type TabOptions } from './types';
+import { preferences } from './playpenPreferences';
 
 interface NavigationHistoryItem {
     id: string;
+}
+
+export type TabOptions = {
+    instant?: boolean;
+    logPrevious?: boolean;
+    removePrevious?: boolean;
+}
+
+export interface tabChangeEventDetail {
+    tabId: string;
 }
 
 let navigationHistory: NavigationHistoryItem[] = [];
@@ -18,7 +27,7 @@ document.addEventListener('click', (event: MouseEvent) => {
     const targetId = (button.dataset['tabNavigation'] ?? '')
         .split(',')
         .map((id) => id.trim())
-        .find((id) => id === 'previous' || getEBD(id) !== null);
+        .find((id) => id === 'previous' || document.getElementById(id) !== null);
     if (!targetId) return;
 
     event.preventDefault();
@@ -43,10 +52,6 @@ window.addEventListener('tabChange', ((event: CustomEvent<{ tabId: string }>) =>
         }
     });
 }) as EventListener);
-
-function getEBD(id: string): HTMLElement | null {
-    return document.getElementById(id);
-}
 
 function getTree(id: string): Array<string> {
     const parts = id.split('_');
@@ -105,7 +110,7 @@ function waitForAnimation(element: HTMLElement, instant: boolean, fallbackMs: nu
 
 export async function remove(id: string, options: TabOptions = {}): Promise<void> {
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
-    const thisElement = getEBD(id);
+    const thisElement = document.getElementById(id);
 
     if (!thisElement) return;
 
@@ -154,7 +159,7 @@ async function gotoNow(id: string, options: TabOptions = {}): Promise<void> {
     const hidePromises: Promise<void>[] = [];
 
     existingTabs.forEach((existingTab) => {
-        const existingTabElement = getEBD(existingTab.id);
+        const existingTabElement = document.getElementById(existingTab.id);
         if (!existingTabElement) return;
 
         const existingTree = getTree(existingTab.id);
@@ -199,7 +204,7 @@ async function gotoNow(id: string, options: TabOptions = {}): Promise<void> {
 }
 
 export async function hide(id: string, options: TabOptions = {}): Promise<void> {
-    const thisElement = getEBD(id);
+    const thisElement = document.getElementById(id);
     if (!thisElement) return;
 
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
@@ -216,7 +221,7 @@ export async function hide(id: string, options: TabOptions = {}): Promise<void> 
 }
 
 export async function show(id: string, options: TabOptions = {}): Promise<void> {
-    const thisElement = getEBD(id);
+    const thisElement = document.getElementById(id);
     if (!thisElement) return;
 
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
@@ -227,7 +232,7 @@ export async function show(id: string, options: TabOptions = {}): Promise<void> 
     parentTree.pop();
 
     for (const parentId of parentTree) {
-        const parentElement = getEBD(parentId);
+        const parentElement = document.getElementById(parentId);
         if (!parentElement || !parentElement.classList.contains('tab')) continue;
 
         const parentDisplay = parentElement.style.display || getComputedStyle(parentElement).display;
@@ -243,6 +248,7 @@ export async function show(id: string, options: TabOptions = {}): Promise<void> 
     await waitForAnimation(thisElement, instant);
 
     thisElement.classList.remove('is-fading-in');
+    if (isSubTab(id)) focusFirstFocusable(thisElement);
 }
 
 export function navigateFromURLParams() {

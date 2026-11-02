@@ -173,9 +173,13 @@ export class ColorPicker {
         const displayWidth = this.svCanvas.clientWidth || 280;
         const displayHeight = 140;
 
+        this.svCanvas.style.width = `${displayWidth}px`;
+        this.svCanvas.style.height = `${displayHeight}px`;
+
         this.svCanvas.width = displayWidth * dpr;
         this.svCanvas.height = displayHeight * dpr;
-        this.svCtx?.scale(dpr, dpr);
+
+        this.svCtx?.setTransform(dpr, 0, 0, dpr, 0, 0);
         this.drawSVBox(displayWidth, displayHeight);
     }
 

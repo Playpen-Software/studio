@@ -1,13 +1,7 @@
-import * as tabs from './tabs';
+import * as tabs from '../tabs';
 
-import { electroview } from './index';
-import type { tabChangeEventDetail } from '../../types/store-types';
-
-function getEBD<T extends HTMLElement>(id: string): T {
-    const element = document.getElementById(id);
-    if (!element) throw new Error(`Required create-space element "${id}" was not found.`);
-    return element as T;
-}
+import { electroview } from '../index';
+import type { tabChangeEventDetail } from '../../../types/store-types';
 
 const randomSpaceNames = [
     'Warehouse', 'Workshop', 'Studio', 'Pantry', 'Archive',
@@ -31,14 +25,14 @@ const randomSpaceIcons = randomSpaceIconColors.map(([primary, secondary], index)
 
 let isInitialized: boolean = false;
 
-const form = getEBD('createSpace-form') as HTMLFormElement;
-const continueBtn = getEBD('createSpace-continue') as HTMLButtonElement;
-const nameInput = getEBD('createSpace-name') as HTMLInputElement;
-const cancelBtn = getEBD('createSpace-cancel') as HTMLButtonElement;
-const errorOutput = getEBD('createSpace-output') as HTMLSpanElement;
-const iconInput = getEBD('createSpace-icon-input') as HTMLInputElement;
-const iconButton = getEBD('createSpace-icon') as HTMLButtonElement;
-const resetIconButton = getEBD('createSpace-icon-reset') as HTMLButtonElement;
+const form = document.getElementById('createSpace-form') as HTMLFormElement;
+const continueBtn = document.getElementById('createSpace-continue') as HTMLButtonElement;
+const nameInput = document.getElementById('createSpace-name') as HTMLInputElement;
+const cancelBtn = document.getElementById('createSpace-cancel') as HTMLButtonElement;
+const errorOutput = document.getElementById('createSpace-output') as HTMLSpanElement;
+const iconInput = document.getElementById('createSpace-icon-input') as HTMLInputElement;
+const iconButton = document.getElementById('createSpace-icon') as HTMLButtonElement;
+const resetIconButton = document.getElementById('createSpace-icon-reset') as HTMLButtonElement;
 
 let selectedIcon: string | null = null;
 

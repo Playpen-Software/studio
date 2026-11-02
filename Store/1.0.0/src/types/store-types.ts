@@ -52,8 +52,4 @@ export interface tabChangeEventDetail {
     tabId: string;
 }
 
-export interface preferenceUpdateEventDetail {
-    preference: string;
-}
-
 export type ChunkCap = 'auto' | 'max' | number;

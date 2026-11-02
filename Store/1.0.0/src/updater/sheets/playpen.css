@@ -150,6 +150,24 @@ hr {
     }
 }
 
+.playpen-standalone-icon {
+    width: 10%;
+    max-height: 95%;
+    min-height: 100px;
+    min-width: 100px;
+    aspect-ratio: 1;
+
+    border-radius: var(--radius);
+
+    &.fill {
+        fill: var(--text-primary);
+    }
+
+    &.stroke {
+        stroke: var(--text-primary);
+    }
+}
+
 .playpen-footer {
     flex-shrink: 0;
     min-height: 0;

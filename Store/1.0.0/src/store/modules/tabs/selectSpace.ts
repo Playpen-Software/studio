@@ -1,14 +1,10 @@
-import { populateSVGs } from "./fileLoader";
-import { showNotification, showPopup } from "./notifications";
-import { preferences } from "./settings";
+import { populateSVGs } from "../fileLoader";
+import { showNotification, showPopup } from "../notifications";
+import { preferences } from "../playpenPreferences";
 
-import { electroview, exit, restart } from "./index";
-import { type tabChangeEventDetail } from "../../types/store-types";
-import { createRandomSpace } from "./createSpace";
-
-function getEBD<T extends HTMLElement = HTMLElement>(id: string): T {
-    return document.getElementById(id) as T;
-}
+import { electroview, exit, restart } from "../index";
+import { type tabChangeEventDetail } from "../tabs";
+import { createRandomSpace } from "../tabs/createSpace";
 
 function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,15 +15,16 @@ let isInitialized: boolean = false;
 const fadeOutAnimation = "playpenFadeOut 0.1s var(--transition-easing-style, ease-out) forwards";
 const fadeInAnimation = "playpenFadeIn 0.2s var(--transition-easing-style, ease-out) forwards";
 const programaticAnimationDuration = 200;
-const itemDelay = 25; // Adjust this (in ms) to make the staggered pops faster or slower
+const itemDelay = 15; // Adjust this (in ms) to make the staggered pops faster or slower
 
-const sourceCodeBtn = getEBD<HTMLButtonElement>('selectSpace-source');
-const issuesBtn = getEBD<HTMLButtonElement>('selectSpace-issues');
-const exitBtn = getEBD<HTMLButtonElement>('selectSpace-exit');
-const restartBtn = getEBD<HTMLButtonElement>('selectSpace-restart');
-const refreshBtn = getEBD<HTMLButtonElement>('selectSpace-refresh');
-const createBtn = getEBD<HTMLButtonElement>('selectSpace-create');
-const searchInput = getEBD<HTMLInputElement>('selectSpace-search');
+const sourceCodeBtn = document.getElementById('selectSpace-source') as HTMLButtonElement;
+const issuesBtn = document.getElementById('selectSpace-issues') as HTMLButtonElement;
+const exitBtn = document.getElementById('selectSpace-exit') as HTMLButtonElement;
+const restartBtn = document.getElementById('selectSpace-restart') as HTMLButtonElement;
+const refreshBtn = document.getElementById('selectSpace-refresh') as HTMLButtonElement;
+const createBtn = document.getElementById('selectSpace-create') as HTMLButtonElement;
+const searchInput = document.getElementById('selectSpace-search') as HTMLButtonElement;
+const websiteBtn = document.getElementById('selectSpace-website') as HTMLButtonElement;
 
 export async function init() {
     if (isInitialized) return;
@@ -40,16 +37,20 @@ export async function init() {
         window.open('https://github.com/Playpen-Technologies/studio/issues', '_blank');
     });
 
+    websiteBtn.addEventListener('click', function() {
+        window.open('https://www.playpensoftware.com/studio');
+    });
+
     exitBtn.addEventListener('click', exit);
     restartBtn.addEventListener('click', restart);
 
     createBtn.addEventListener('click', async (event: MouseEvent) => {
         if (!event.shiftKey) return;
+        if (!preferences['enableDeveloperFeatures']) return;
         event.preventDefault();
         event.stopPropagation();
         try {
-            const { name, id } = await createRandomSpace();
-            showNotification(`Created random space '${name}' (ID: ${id})`);
+            await createRandomSpace();
             await populateSpacesList(true, preferences['transitionAnimations']);
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
@@ -66,7 +67,7 @@ export async function init() {
 }
 
 async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferences['transitionAnimations']): Promise<void> {
-    const spacesList = getEBD<HTMLDivElement>('selectSpace-list');
+    const spacesList = document.getElementById('selectSpace-list') as HTMLDivElement;
 
     // Smoothly fade out existing items
     if (fadeOut && animate) {
@@ -89,7 +90,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
     if (!spaces.length) {
         spacesList.innerHTML = `
         <div class="center standalone"${animate ? ` style="animation: ${fadeInAnimation}"` : ''}>
-            <svgPlaceholder class="playpen-standalone-icon fill">assets/svg/selectSpace/empty.svg</svgPlaceholder>
+            <svgPlaceholder class="playpen-standalone-icon">assets/svg/spaces.svg</svgPlaceholder>
             <p>You have no spaces. Click 'Create New Space' at the bottom right of this menu to get started!</p>
         </div>
         `;
@@ -122,7 +123,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
         iconButtonEl.className = 'space-icon-button';
 
         iconEl.className = 'space-icon';
-        const defaultIconSrc = new URL('assets/favicon.png', import.meta.url).href;
+        const defaultIconSrc = new URL('assets/img/favicon.png', import.meta.url).href;
         const spaceImage = space.imageBase64;
         iconEl.src = typeof spaceImage === 'string' && spaceImage.trim()
         ? spaceImage
@@ -134,7 +135,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
         iconEl.alt = '';
 
         editIndicatorEl.className = 'space-icon-edit';
-        editSvgPlaceholderEl.textContent = 'assets/svg/edit.svg';
+        editSvgPlaceholderEl.textContent = 'assets/svg/selectSpace/edit.svg';
         editIndicatorEl.appendChild(editSvgPlaceholderEl);
         iconButtonEl.append(iconEl, editIndicatorEl);
 
@@ -268,7 +269,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
 }
 
 function updateSpaceSearch(): void {
-    const spacesList = getEBD<HTMLDivElement>('selectSpace-list');
+    const spacesList = document.getElementById('selectSpace-list') as HTMLDivElement;
     const searchTerm = searchInput.value.trim().toLocaleLowerCase();
     const items = Array.from(spacesList.querySelectorAll<HTMLElement>('.item'));
 

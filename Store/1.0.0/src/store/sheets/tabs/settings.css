@@ -6,6 +6,7 @@
 
     .main-container {
         flex: 1;
+        overflow-y: auto;
 
         .sub-tab-container {
             display: flex;
@@ -14,8 +15,6 @@
 
             width: 100%;
             height: 100%;
-
-            overflow-y: auto;
 
             .tab {
                 flex-direction: column;
@@ -41,52 +40,6 @@
                 .theme-variables {
                     display: flex;
                     flex-direction: column;
-                    gap: var(--gap, 5px);
-                }
-
-                .theme-profiles {
-                    padding: var(--resting-area-padding, 5px);
-                    background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
-                    border-radius: var(--radius, 4px);
-
-                    label {
-                        padding-left: calc(var(--radius, 4px) * 0.75);
-                    }
-                }
-
-                .theme-profile-actions {
-                    display: flex;
-                    flex-wrap: wrap;
-                    align-items: center;
-                    gap: var(--gap, 5px);
-
-                    .playpen-input {
-                        flex: 1;
-                        min-width: min(100%, 220px);
-                        box-sizing: border-box;
-                    }
-                }
-
-                #settings-theme-profile {
-                    box-sizing: border-box;
-                    width: 100%;
-                    background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
-                    border: 1px solid transparent;
-                    border-radius: var(--radius, 4px);
-                    color: var(--text-primary, #313131);
-                    font: inherit;
-                    padding: var(--clickable-area-padding, var(--clickable-area-padding-y, 0.4rem) var(--clickable-area-padding-x, 1.0rem));
-                }
-
-                .theme-variable-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: var(--gap, 5px);
-                }
-
-                .theme-variable-list {
-                    display: grid;
-                    grid-template-columns: repeat(2, 1fr);
                     gap: var(--gap, 5px);
                 }
             }

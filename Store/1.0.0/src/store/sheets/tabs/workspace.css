@@ -1,52 +1,91 @@
 #workspace {
-    flex-direction: row;
-
     width: 100%;
     height: 100%;
 
-    background: var(--background-base, #f6f6f6);
+    /* Hide Space Fillers within the Workspace to eliminate distractions,
+    since this is a very dense tab, it prevents visual fatigue */
+    background: var(--background-base);
 
-    .navigation {
+    #workspace-tabsList {
         display: flex;
-        flex-direction: column;
-        gap: var(--gap, 5px);
+        flex-direction: row;
 
         box-sizing: border-box;
-        height: 100%;
-        width: max-content;
-        overflow-y: auto;
+        width: 100%;
+        height: fit-content;
 
-        background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+        background: var(--background-stack);
+        border-bottom: 1px solid var(--background-stack);
 
-        padding: var(--resting-area-padding, 5px);
+        padding: var(--resting-area-padding);
 
-        button {
+        .tabItem {
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            flex-direction: row;
+            flex: 0 1 160px;
 
-            width: max-content;
+            max-width: 200px;
+            min-width: 80px;
+
+            background: var(--background-stack);
+
+            border: 1px solid var(--background-stack);
+            border-radius: calc(var(--radius) / 2);
+
+            .label {
+                flex: 1;
+                min-width: 0;
+
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                font-size: 16px;
+                color: var(--text-primary);
+
+                overflow: hidden;
+                padding: 4px 0 4px 8px;
+            }
+
+            &:hover .closeButton {
+                visibility: visible;
+            }
+
+            .closeButton {
+                visibility: hidden;
+
+                height: 100%;
+                aspect-ratio: 1;
+
+                background: transparent;
+                border: none;
+
+                color: var(--text-primary);
+
+                svg {
+                    height: 100%;
+                    aspect-ratio: 1;
+                }
+
+                &:hover {
+                    font-weight: bold;
+                }
+            }
+        }
+
+        #workspace-newTab {
+            aspect-ratio: 1;
 
             background: transparent;
             border: none;
-            border-radius: var(--radius, 4px);
 
-            color: var(--text-primary, #313131);
-            font-weight: bold;
-
-            cursor: pointer;
-            transition: background var(--transition, var(--transition-speed, 0.2s) var(--transition-easing-style, ease-out)), box-shadow var(--outset-shadow, 0 6px 10px rgba(0, 0, 0, 0.25));
+            color: var(--text-primary);
 
             svg {
-                width: 2.5em;
+                height: 100%;
                 aspect-ratio: 1;
-                fill: var(--text-primary, #313131);
             }
 
             &:hover {
-                background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
-                box-shadow: var(--outset-shadow, 0 6px 10px rgba(0, 0, 0, 0.25));
+                font-weight: bold;
             }
         }
     }

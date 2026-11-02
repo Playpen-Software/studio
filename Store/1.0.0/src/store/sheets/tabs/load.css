@@ -9,6 +9,10 @@
 
     animation: playpenFadeIn 0.8s var(--transition-easing-style, ease-out) forwards;
 
+    .playpen-standalone-icon {
+        fill: var(--brand-primary);
+    }
+
     .center {
         flex: 1;
     }
@@ -29,21 +33,5 @@
 
     .playpen-horizontal-navigation {
         padding: 0;
-    }
-}
-
-/* Small Screen Support */
-
-@media screen and (max-width: 256px) {
-    .load-icon {
-        width: 95%;
-        height: auto;
-    }
-}
-
-@media screen and (max-height: 256px) {
-    .load-icon {
-        width: auto;
-        height: 95%;
     }
 }
