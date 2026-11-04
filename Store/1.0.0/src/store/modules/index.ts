@@ -7,9 +7,13 @@ import { waitForLoad } from "./playpen";
 
 import * as load from './load';
 
-// Import all modules that listen for tabChange events, so electrobun can package them, and all top-level code is ran.
+// Import all modules that listen for events, so electrobun can package them, and all top-level code is ran.
 import './tabs/createSpace';
 import './tabs/selectSpace';
+import './tabs/settings';
+import './tabs/workspace';
+
+import './themeEditor';
 
 // Import CSS files
 import '../sheets/index.css';
@@ -43,7 +47,7 @@ export async function exit() {
         "Are you sure you want to exit Playpen Store?", "options",
         [
             { content: "Cancel", value: false, highlighted: true },
-            { content: "Exit", value: true, highlighted: false }
+            { content: "Exit", value: true }
         ]
     );
 
@@ -59,7 +63,7 @@ export async function restart() {
         "options",
         [
             { content: "Cancel", value: false, highlighted: true },
-            { content: "Restart", value: true, highlighted: false }
+            { content: "Restart", value: true }
         ]
     );
 

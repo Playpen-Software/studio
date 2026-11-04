@@ -110,7 +110,7 @@ function showTooltip(trigger: HTMLElement): void {
     }
 
     tooltip.innerHTML = content;
-    tooltip.classList.toggle('primary', trigger.querySelector('.tooltip.primary') !== null);
+    tooltip.classList.toggle('primary-focus', trigger.querySelector('.tooltip.primary-focus') !== null);
     addDescription(trigger);
     repositionTooltip();
     tooltip.classList.add('is-visible');

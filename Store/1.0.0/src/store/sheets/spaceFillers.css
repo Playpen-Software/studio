@@ -11,22 +11,22 @@
     overflow: hidden;
     
     &.is-fading-in {
-        animation: spaceFillerFadeIn var(--transition, var(--transition-speed, 0.2s) var(--transition-easing-style, ease-out)) forwards;
+        animation: spaceFillerFadeIn var(--transition) forwards;
     }
     
     &.is-fading-out {
-        animation: spaceFillerFadeOut var(--transition, var(--transition-speed, 0.2s) var(--transition-easing-style, ease-out)) forwards;
+        animation: spaceFillerFadeOut var(--transition) forwards;
     }
     
     &.use-blur {
         opacity: 0.4;
         
         &.is-fading-in {
-            animation: blurSpaceFillerFadeIn var(--transition, var(--transition-speed, 0.2s) var(--transition-easing-style, ease-out)) forwards;
+            animation: blurSpaceFillerFadeIn var(--transition) forwards;
         }
         
         &.is-fading-out {
-            animation: blurSpaceFillerFadeOut var(--transition, var(--transition-speed, 0.2s) var(--transition-easing-style, ease-out)) forwards;
+            animation: blurSpaceFillerFadeOut var(--transition) forwards;
         }
     }
 }
@@ -80,7 +80,7 @@ CIRCLES (7 Total)
     height: 300px;
     top: 15%;
     left: 10%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -89,7 +89,7 @@ CIRCLES (7 Total)
     height: 450px;
     top: 60%;
     left: 75%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -98,7 +98,7 @@ CIRCLES (7 Total)
     height: 200px;
     top: 10%;
     left: 80%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -107,7 +107,7 @@ CIRCLES (7 Total)
     height: 350px;
     top: 80%;
     left: 5%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -116,7 +116,7 @@ CIRCLES (7 Total)
     height: 150px;
     top: 40%;
     left: 60%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -125,7 +125,7 @@ CIRCLES (7 Total)
     height: 250px;
     top: 5%;
     left: 50%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -134,7 +134,7 @@ CIRCLES (7 Total)
     height: 180px;
     top: 85%;
     left: 60%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     border-radius: 50%;
 }
 
@@ -148,7 +148,7 @@ TRIANGLES (7 Total)
     left: 50%;
     border-left: 80px solid transparent;
     border-right: 80px solid transparent;
-    border-bottom: 140px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 140px solid var(--background-stack);
     transform: rotate(25deg);
 }
 
@@ -159,7 +159,7 @@ TRIANGLES (7 Total)
     left: 20%;
     border-left: 60px solid transparent;
     border-right: 60px solid transparent;
-    border-bottom: 120px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 120px solid var(--background-stack);
     transform: rotate(-15deg);
 }
 
@@ -170,7 +170,7 @@ TRIANGLES (7 Total)
     left: 80%;
     border-left: 70px solid transparent;
     border-right: 70px solid transparent;
-    border-bottom: 130px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 130px solid var(--background-stack);
     transform: rotate(40deg);
 }
 
@@ -181,7 +181,7 @@ TRIANGLES (7 Total)
     left: 10%;
     border-left: 50px solid transparent;
     border-right: 50px solid transparent;
-    border-bottom: 100px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 100px solid var(--background-stack);
     transform: rotate(-25deg);
 }
 
@@ -192,7 +192,7 @@ TRIANGLES (7 Total)
     left: 50%;
     border-left: 90px solid transparent;
     border-right: 90px solid transparent;
-    border-bottom: 160px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 160px solid var(--background-stack);
     transform: rotate(60deg);
 }
 
@@ -203,7 +203,7 @@ TRIANGLES (7 Total)
     left: 60%;
     border-left: 60px solid transparent;
     border-right: 60px solid transparent;
-    border-bottom: 120px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 120px solid var(--background-stack);
     transform: rotate(-35deg);
 }
 
@@ -214,7 +214,7 @@ TRIANGLES (7 Total)
     left: 90%;
     border-left: 50px solid transparent;
     border-right: 50px solid transparent;
-    border-bottom: 100px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    border-bottom: 100px solid var(--background-stack);
     transform: rotate(20deg);
 }
 
@@ -226,7 +226,7 @@ POLYGONS (6 Total)
     height: 120px;
     top: 50%;
     left: 30%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
 }
 
@@ -235,7 +235,7 @@ POLYGONS (6 Total)
     height: 100px;
     top: 20%;
     left: 40%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 }
 
@@ -244,7 +244,7 @@ POLYGONS (6 Total)
     height: 140px;
     top: 65%;
     left: 70%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
@@ -253,7 +253,7 @@ POLYGONS (6 Total)
     height: 120px;
     top: 35%;
     left: 20%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(50% 0%, 100% 25%, 75% 100%, 25% 100%, 0% 25%);
 }
 
@@ -262,7 +262,7 @@ POLYGONS (6 Total)
     height: 160px;
     top: 50%;
     left: 80%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(50% 0%, 85% 25%, 100% 50%, 85% 75%, 50% 100%, 15% 75%, 0% 50%, 15% 25%);
 }
 
@@ -271,7 +271,7 @@ POLYGONS (6 Total)
     height: 110px;
     top: 75%;
     left: 30%;
-    background-color: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+    background-color: var(--background-stack);
     clip-path: polygon(50% 0%, 100% 25%, 85% 100%, 15% 100%, 0% 25%);
 }
 

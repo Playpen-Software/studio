@@ -5,11 +5,11 @@
     "": {
       "name": "playpen-store",
       "dependencies": {
-        "electrobun": "^2.0.2",
+        "electrobun": "^2.0.5",
       },
       "devDependencies": {
-        "@types/bun": "^1.4.2",
-        "@types/node": "^26.6.4",
+        "@types/bun": "^1.4.4",
+        "@types/node": "^26.6.6",
         "rcedit": "^5.0.2",
         "typescript": "^7.0.2",
       },

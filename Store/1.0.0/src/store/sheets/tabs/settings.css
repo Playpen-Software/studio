@@ -19,13 +19,13 @@
             .tab {
                 flex-direction: column;
                 flex: 1;
-                gap: var(--gap, 5px);
+                gap: var(--gap);
 
                 box-sizing: border-box;
                 width: 65%;
 
                 overflow-y: visible;
-                padding: var(--resting-area-padding, 5px);
+                padding: var(--resting-area-padding);
 
                 .center {
                     flex: 1;
@@ -40,7 +40,7 @@
                 .theme-variables {
                     display: flex;
                     flex-direction: column;
-                    gap: var(--gap, 5px);
+                    gap: var(--gap);
                 }
             }
         }

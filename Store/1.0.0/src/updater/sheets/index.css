@@ -1,16 +1,16 @@
 body {
     padding: 0;
     background: transparent;
-    
+
     font-family: Arial, Helvetica, sans-serif;
 }
 
 .center {
     min-height: 100%;
 
-    background: var(--background-base, #f6f6f6);
-    border-radius: var(--radius, 4px);
-    
+    background: var(--background-base);
+    border-radius: var(--radius);
+
     animation: window-open 0.25s cubic-bezier(0.1, 0.9, 0.2, 1) forwards;
     transform-origin: center center;
 }
@@ -26,17 +26,17 @@ h1 {
 }
 
 #debug-output {
-    background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
-    border-radius: var(--radius, 4px);
-    
-    color: var(--text-primary, #313131);
-    
+    background: var(--background-stack);
+    border-radius: var(--radius);
+
+    color: var(--text-primary);
+
     padding: 0.3rem 0.7rem;
-    
+
     .error {
         color: red;
     }
-    
+
     .warning {
         color: orange;
     }
@@ -45,14 +45,14 @@ h1 {
 .footer {
     display: flex;
     flex-direction: row;
-    gap: var(--gap, 5px);
-    
+    gap: var(--gap);
+
     position: fixed;
     bottom: 0;
-    
+
     width: calc(100% - 10px);
-    padding: var(--resting-area-padding, 5px);
-    
+    padding: var(--resting-area-padding);
+
     button, a {
         padding: 0.4rem 0.8rem;
     }
@@ -63,7 +63,7 @@ h1 {
         opacity: 0;
         transform: scale(0.92);
     }
-    
+
     100% {
         opacity: 1;
         transform: scale(1);

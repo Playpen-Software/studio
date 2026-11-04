@@ -25,7 +25,6 @@ const randomSpaceIcons = randomSpaceIconColors.map(([primary, secondary], index)
 
 let isInitialized: boolean = false;
 
-const form = document.getElementById('createSpace-form') as HTMLFormElement;
 const continueBtn = document.getElementById('createSpace-continue') as HTMLButtonElement;
 const nameInput = document.getElementById('createSpace-name') as HTMLInputElement;
 const cancelBtn = document.getElementById('createSpace-cancel') as HTMLButtonElement;
@@ -62,8 +61,7 @@ export function createRandomSpace(): Promise<{ name: string; id: number | bigint
 export async function init() {
     if (isInitialized) return;
 
-    form.addEventListener('submit', async function(event) {
-        event.preventDefault();
+    const createSpace = async () => {
         if (continueBtn.disabled) return;
         const name = nameInput.value.trim();
         if (!name) {
@@ -83,6 +81,13 @@ export async function init() {
         } finally {
             continueBtn.disabled = false;
         }
+    };
+
+    continueBtn.addEventListener('click', createSpace);
+    nameInput.addEventListener('keydown', (event: KeyboardEvent) => {
+        if (event.key !== 'Enter') return;
+        event.preventDefault();
+        void createSpace();
     });
 
     iconButton.addEventListener('click', () => iconInput.click());

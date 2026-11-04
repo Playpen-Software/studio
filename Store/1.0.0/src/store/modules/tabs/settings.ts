@@ -48,7 +48,7 @@ async function chooseResetAction(): Promise<void> {
             { content: 'Everything', value: 'all' },
             { content: 'Preferences', value: 'preferences' },
             { content: 'Theme', value: 'theme' },
-            { content: 'Local Inventory', value: 'inventory' },
+            { content: 'Inventory', value: 'inventory' },
             { content: 'Cancel', value: undefined, highlighted: true }
         ]
     );

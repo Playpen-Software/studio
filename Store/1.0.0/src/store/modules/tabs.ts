@@ -4,6 +4,8 @@ interface NavigationHistoryItem {
     id: string;
 }
 
+let activeTab = '';
+
 export type TabOptions = {
     instant?: boolean;
     logPrevious?: boolean;
@@ -46,9 +48,9 @@ window.addEventListener('tabChange', ((event: CustomEvent<{ tabId: string }>) =>
         const navIds = navAttr.split(',').map((id) => id.trim());
 
         if (navIds.includes(activeTabId)) {
-            button.classList.add('primary');
+            button.classList.add('primary-focus');
         } else {
-            button.classList.remove('primary');
+            button.classList.remove('primary-focus');
         }
     });
 }) as EventListener);
@@ -80,7 +82,7 @@ function focusFirstFocusable(element: HTMLElement): void {
     firstFocusable?.focus();
 }
 
-function waitForAnimation(element: HTMLElement, instant: boolean, fallbackMs: number = 350): Promise<void> {
+function waitForAnimation(element: HTMLElement, instant: boolean, fallbackMs: number = 10000): Promise<void> {
     if (instant) return Promise.resolve();
 
     return new Promise((resolve) => {
@@ -108,18 +110,32 @@ function waitForAnimation(element: HTMLElement, instant: boolean, fallbackMs: nu
     });
 }
 
+function clearAnimations(element: HTMLElement): void {
+    element.getAnimations().forEach(animation => animation.cancel());
+}
+
+export function getActiveTab(): string {
+    return activeTab;
+}
+
 export async function remove(id: string, options: TabOptions = {}): Promise<void> {
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
     const thisElement = document.getElementById(id);
 
     if (!thisElement) return;
 
-    thisElement.style.animationDuration = instant ? '0s' : '';
+    clearAnimations(thisElement);
     thisElement.classList.remove('is-fading-in', 'is-fading-out');
+    if (instant) {
+        thisElement.remove();
+        return;
+    }
+
+    thisElement.style.animationDuration = '';
     void thisElement.offsetWidth;
     thisElement.classList.add('is-fading-out');
 
-    await waitForAnimation(thisElement, instant);
+    await waitForAnimation(thisElement, false);
     thisElement.remove();
 }
 
@@ -130,6 +146,7 @@ export function goto(id: string, options: TabOptions = {}): Promise<void> {
 }
 
 async function gotoNow(id: string, options: TabOptions = {}): Promise<void> {
+    activeTab = id;
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
     let logPrevious = options.logPrevious !== undefined ? options.logPrevious : true;
 
@@ -209,12 +226,18 @@ export async function hide(id: string, options: TabOptions = {}): Promise<void> 
 
     const instant = options.instant !== undefined ? options.instant : !preferences['transitionAnimations'];
 
-    thisElement.style.animationDuration = instant ? '0s' : '';
+    clearAnimations(thisElement);
     thisElement.classList.remove('is-fading-in', 'is-fading-out');
+    if (instant) {
+        thisElement.style.display = 'none';
+        return;
+    }
+
+    thisElement.style.animationDuration = '';
     void thisElement.offsetWidth;
     thisElement.classList.add('is-fading-out');
 
-    await waitForAnimation(thisElement, instant);
+    await waitForAnimation(thisElement, false);
 
     thisElement.style.display = "none";
     thisElement.classList.remove('is-fading-out');
@@ -239,13 +262,19 @@ export async function show(id: string, options: TabOptions = {}): Promise<void> 
         if (parentDisplay === 'none') await show(parentId, { instant });
     }
 
+    clearAnimations(thisElement);
     thisElement.style.display = thisDisplay;
-    thisElement.style.animationDuration = instant ? '0s' : '';
     thisElement.classList.remove('is-fading-in', 'is-fading-out');
+    if (instant) {
+        if (isSubTab(id)) focusFirstFocusable(thisElement);
+        return;
+    }
+
+    thisElement.style.animationDuration = '';
     void thisElement.offsetWidth;
     thisElement.classList.add('is-fading-in');
 
-    await waitForAnimation(thisElement, instant);
+    await waitForAnimation(thisElement, false);
 
     thisElement.classList.remove('is-fading-in');
     if (isSubTab(id)) focusFirstFocusable(thisElement);

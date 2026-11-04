@@ -367,7 +367,7 @@ export function showPopup<T = any>(
         effectiveOptions.forEach((opt) => {
             const btn = document.createElement("button");
             btn.textContent = opt.content;
-            btn.className = opt.highlighted ? "playpen-primary-button primary" : "playpen-primary-button";
+            btn.className = opt.highlighted ? "playpen-primary-button primary-focus" : "playpen-primary-button";
             if (opt.highlighted) highlightedButton = btn;
 
             btn.addEventListener("click", () => handleOptionSelection(opt.value));

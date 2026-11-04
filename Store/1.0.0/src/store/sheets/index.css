@@ -11,5 +11,5 @@ body {
 
 	font-size: 18px;
 
-	color: var(--text-primary, #313131);
+	color: var(--text-primary);
 }

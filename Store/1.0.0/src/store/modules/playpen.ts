@@ -1,3 +1,5 @@
+const svgSessionCache: { [key: string]: Promise<string> } = {};
+
 export function init(): void {
     const dependentCheckboxes = document.querySelectorAll<HTMLInputElement>(
         'input[type="checkbox"][data-depends]'
@@ -373,5 +375,50 @@ export class PopupPlacer {
         popup.style.position = "";
         popup.style.left = "";
         popup.style.top = "";
+    }
+}
+
+export async function populateSVGs() {
+    // Select both custom element tag forms (<svgPlaceholder> and <svgplaceholder>)
+    const placeholders = document.querySelectorAll('svgPlaceholder, svgplaceholder');
+
+    for (const placeholder of Array.from(placeholders)) {
+        const path = placeholder.textContent?.trim();
+
+        if (!path) {
+            console.warn("Found an <svgPlaceholder> without a valid file path inside.");
+            placeholder.remove();
+            continue;
+        }
+
+        try {
+            let svgText = "";
+
+            if (!svgSessionCache[path]) {
+                svgSessionCache[path] = fetch(path).then(async (response) => {
+                    if (!response.ok) throw new Error(`HTTP status ${response.status}`);
+                    return await response.text();
+                });
+            }
+            svgText = await svgSessionCache[path];
+
+            // Parse SVG string into DOM nodes
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+            const svgElement = svgDoc.querySelector('svg');
+
+            if (!svgElement || svgDoc.querySelector('parsererror')) {
+                throw new Error(`No valid <svg> tag found in file at path: "${path}"`);
+            }
+
+            for (const attribute of Array.from(placeholder.attributes)) {
+                svgElement.setAttribute(attribute.name, attribute.value);
+            }
+
+            placeholder.replaceWith(svgElement);
+        } catch (error) {
+            console.error(`Failed to load SVG from path "${path}":`, error);
+            placeholder.remove();
+        }
     }
 }

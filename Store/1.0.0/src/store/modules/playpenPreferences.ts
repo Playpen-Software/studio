@@ -1,8 +1,11 @@
 import { electroview } from './index';
 import { init as initPlaypenLib } from './playpen';
-import { applyThemeSettings, init as initThemeEditor } from './themeEditor';
 
 const defaultPreferences: Record<string, unknown> = { themeVariables: {} };
+
+export interface preferenceUpdateEventDetail {
+    preference: string;
+}
 
 let currentPreferences: Record<string, unknown> = { ...defaultPreferences };
 export let preferences: Readonly<Record<string, any>> = Object.freeze({ ...currentPreferences });
@@ -17,7 +20,6 @@ export async function init(): Promise<void> {
 
     initSettingsInputs();
     applySettings();
-    initThemeEditor();
     initPlaypenLib();
 }
 
@@ -106,15 +108,18 @@ function initSettingsInputs(): void {
         if (!key) return;
         syncPreferenceInput(input, key);
 
-        input.addEventListener('change', () => {
+        const saveInputPreference = () => {
             let value: unknown = input.type === 'checkbox'
                 ? input.checked
                 : input.type === 'number' ? input.valueAsNumber : input.value;
-            if (typeof value === 'number' && Number.isNaN(value)) value = currentPreferences[key];
-            void setPreference(key, value).catch(error => {
+            if (typeof value === 'number' && Number.isNaN(value)) return;
+            const update = setPreference(key, value);
+            void update.catch(error => {
                 console.error(`Failed to save preference ${key}:`, error);
             });
-        });
+        };
+
+        input.addEventListener(input.type === 'checkbox' ? 'change' : 'input', saveInputPreference);
     });
 
     window.addEventListener('preferencesUpdate', event => {
@@ -156,7 +161,6 @@ export async function resetPreferences(): Promise<void> {
 }
 
 function applySettings(): void {
-    applyThemeSettings();
     const style = document.documentElement.style;
     if (!preferences['transitionAnimations']) style.setProperty('--transition-speed', '0s');
 }

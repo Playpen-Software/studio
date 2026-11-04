@@ -3,68 +3,68 @@
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    
+
     position: fixed;
     bottom: 20px;
     left: 20px;
-    
+
     box-sizing: border-box;
     width: 30%;
     min-height: 2.5em;
-    
-    background: var(--background-base, #f6f6f6);
-    border: 1px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
-    border-radius: var(--radius, 4px);
-    box-shadow: var(--outset-shadow, 0 6px 10px rgba(0, 0, 0, 0.25));
-    
+
+    background: var(--background-base);
+    border: 1px solid var(--background-stack);
+    border-radius: var(--radius);
+    box-shadow: var(--outset-shadow);
+
     padding: 8px 12px 10px 16px;
     z-index: 9999;
-    
+
     .notification-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        border-bottom: 1px solid color-mix(in srgb, var(--text-primary, #313131), transparent 75%);
+        border-bottom: 1px solid color-mix(in srgb, var(--text-primary), transparent 75%);
         padding-bottom: 5px;
     }
-    
+
     .notification-title {
-        color: var(--text-primary, #313131);
+        color: var(--text-primary);
         font-size: 0.9rem;
         font-weight: 600;
         text-transform: capitalize;
     }
-    
+
     &.error {
         background: #ff9b9b;
     }
-    
+
     &.warning {
         background: #ffffb2;
     }
-    
+
     .notification-message {
-        color: var(--text-primary, #313131);
+        color: var(--text-primary);
         margin: 0;
         font-size: 0.95rem;
         text-align: left;
         word-break: break-word;
         flex-grow: 1;
     }
-    
+
     .notification-close {
         background: transparent;
         border: none;
-        color: var(--text-primary, #313131);
+        color: var(--text-primary);
         font-size: 1.25rem;
         line-height: 1;
         cursor: pointer;
         padding: 2px 6px;
         border-radius: 4px;
         opacity: 0.7;
-        transition: opacity 0.15s var(--transition-easing-style, ease-out), background-color 0.15s var(--transition-easing-style, ease-out);
-        
+        transition: opacity 0.15s var(--transition-easing-style), background-color 0.15s var(--transition-easing-style);
+
         &:hover {
             opacity: 1;
             background: rgba(0, 0, 0, 0.08);
@@ -76,80 +76,80 @@
     position: fixed;
     top: 0;
     left: 0;
-    
+
     width: 100%;
     height: 100%;
-    
+
     background: transparent;
     pointer-events: none;
-    
+
     z-index: 9998;
-    
+
     &.center {
         position: fixed;
     }
-    
+
     &.popup-container-shaded {
-        background: var(--shade, rgba(0, 0, 0, 0.3));
+        background: var(--shade);
         pointer-events: auto;
     }
-    
+
     .popup {
         display: flex;
         flex-direction: column;
-        gap: var(--gap, 5px);
-        
+        gap: var(--gap);
+
         box-sizing: border-box;
         width: max-content;
         max-width: 95%;
-        
-        background: var(--background-base, #f6f6f6);
-        border-radius: var(--radius, 4px);
-        
-        box-shadow: var(--outset-shadow, 0 6px 10px rgba(0, 0, 0, 0.25));
-        
-        padding: var(--resting-area-padding, 5px);
+
+        background: var(--background-base);
+        border-radius: var(--radius);
+
+        box-shadow: var(--outset-shadow);
+
+        padding: var(--resting-area-padding);
         pointer-events: auto;
-        
+
         .popup-title-bar {
             padding: 0.5rem 1.1rem;
-            border-bottom: 1px solid var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+            border-bottom: 1px solid var(--background-stack);
         }
-        
+
         .popup-title {
-            color: var(--text-primary, #313131);
+            color: var(--text-primary);
             font-weight: bolder;
         }
-        
+
         .message-container {
             display: flex;
             flex-direction: column;
-            gap: var(--gap, 5px);
-            
+            gap: var(--gap);
+
             box-sizing: border-box;
-            
+
             padding: 0.5rem 1.1rem;
             overflow: hidden;
-            
+
             span {
-                color: var(--text-primary, #313131);
+                color: var(--text-primary);
                 white-space: normal;
                 word-break: break-word;
             }
-            
+
             input {
                 box-sizing: border-box;
                 width: 100%;
             }
-            
+
             input[type="range"] {
-                accent-color: var(--brand-primary, #2d9eef);
+                accent-color: var(--brand-primary);
             }
 
             .popup-range-control {
                 display: flex;
                 align-items: center;
-                gap: var(--gap, 5px);
+                gap: var(--gap);
 
                 input[type="range"] {
                     flex: 1;
@@ -159,7 +159,7 @@
 
                 output {
                     min-width: 3ch;
-                    color: var(--text-primary, #313131);
+                    color: var(--text-primary);
                     text-align: right;
                     font-variant-numeric: tabular-nums;
                 }
@@ -168,7 +168,7 @@
             .popup-radio-group {
                 display: flex;
                 flex-direction: column;
-                gap: var(--gap, 5px);
+                gap: var(--gap);
                 margin: 0;
                 padding: 0;
                 border: 0;
@@ -176,102 +176,102 @@
                 label {
                     display: flex;
                     align-items: center;
-                    gap: var(--gap, 5px);
+                    gap: var(--gap);
                     cursor: pointer;
                 }
 
                 input[type="radio"] {
                     width: auto;
-                    accent-color: var(--brand-primary, #2d9eef);
+                    accent-color: var(--brand-primary);
                 }
             }
-            
+
             .popup-color-hex-label {
                 display: flex;
                 flex-direction: column;
                 gap: 6px;
-                color: var(--text-primary, #313131);
+                color: var(--text-primary);
                 font-size: 0.9rem;
                 font-weight: 600;
             }
-            
+
             .popup-color-hex {
                 font-family: monospace;
             }
-            
+
             .custom-color-picker-widget {
                 display: flex;
                 flex-direction: column;
                 gap: 8px;
                 width: 100%;
                 box-sizing: border-box;
-                
+
                 .popup-color-preview {
                     width: 100%;
                     height: 28px;
-                    border-radius: var(--radius, 4px);
-                    border: 1px solid var(--background-secondary, color-mix(in srgb, var(--background-base, #f6f6f6), black var(--background-color-step-amount, 12%)));
+                    border-radius: var(--radius);
+                    border: 1px solid var(--background-secondary);
                 }
-                
+
                 .popup-sv-canvas {
                     width: 100%;
                     height: 140px;
                     cursor: crosshair;
                     touch-action: none;
-                    border-radius: var(--radius, 4px);
-                    border: 1px solid var(--background-secondary, color-mix(in srgb, var(--background-base, #f6f6f6), black var(--background-color-step-amount, 12%)));
+                    border-radius: var(--radius);
+                    border: 1px solid var(--background-secondary);
                 }
-                
+
                 .popup-hue-slider {
                     width: 100%;
                     height: 16px;
                     cursor: pointer;
                     appearance: none;
                     background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-                    border-radius: var(--radius, 4px);
+                    border-radius: var(--radius);
                     outline: none;
-                    
+
                     &::-webkit-slider-thumb {
                         appearance: none;
                         width: 16px;
                         height: 20px;
                         background: #ffffff;
-                        border: 2px solid var(--text-primary, #313131);
+                        border: 2px solid var(--text-primary);
                         border-radius: 3px;
                         cursor: pointer;
                         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
                     }
-                    
+
                     &::-moz-range-thumb {
                         width: 16px;
                         height: 20px;
                         background: #ffffff;
-                        border: 2px solid var(--text-primary, #313131);
+                        border: 2px solid var(--text-primary);
                         border-radius: 3px;
                         cursor: pointer;
                         box-shadow: 0 1px 3px rgba(0,0,0,0.3);
                     }
                 }
             }
-            
+
             select {
                 box-sizing: border-box;
                 width: 100%;
-                background: var(--background-stack, color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%)));
+                background: var(--background-stack);
                 border: 1px solid transparent;
-                border-radius: var(--radius, 4px);
-                color: var(--text-primary, #313131);
+                border-radius: var(--radius);
+                color: var(--text-primary);
                 font: inherit;
-                padding: var(--clickable-area-padding, var(--clickable-area-padding-y, 0.4rem) var(--clickable-area-padding-x, 1.0rem));
+                padding: var(--clickable-area-padding);
             }
         }
-        
+
         .action-container {
             display: flex;
             flex-direction: row;
-            gap: var(--gap, 5px);
+            gap: var(--gap);
             overflow-y: auto;
-            
+
             button {
                 flex: 1;
             }

@@ -5,8 +5,7 @@ import * as spaceFillers from './spaceFillers';
 import * as notifications from './notifications';
 import { initTooltips } from './tooltips';
 
-import { electroview } from './index';
-import { populateSVGs } from "./fileLoader";
+import { populateSVGs } from "./playpen";
 
 let delayTimeout: any;
 
@@ -31,9 +30,6 @@ export function init(): Promise<void> {
 async function initialize() {
     versionLabel!.innerText = `v${index.store.sessionVersion}` || "Failed to get session version";
 
-    const context = window as any;
-    context.exposeDevFunctions = index.exposeDevFunctions;
-
     initTooltips();
 
     let loadMenuDelay: number = 750;
@@ -49,7 +45,7 @@ async function initialize() {
 
     // Replace SVG Placeholders with SVGs
     try {
-        await populateSVGs((path) => electroview.rpc!.request.readFile({ path }));
+        await populateSVGs();
     } catch {
         try {
             await populateSVGs();
@@ -100,7 +96,10 @@ async function initialize() {
         notifications?.showNotification(`Non-Critical Error: Failed to load space filler shapes: ${message}`, 'warning');
     }
 
+    window.dispatchEvent(new CustomEvent('storeLoaded'));
+    console.log('Store has loaded');
     delayTimeout = setTimeout(finishLoading, loadMenuDelay);
+    console.log(`Load Delay: ${loadMenuDelay}`);
     skipDelayBtn.classList.remove('hidden');
     skipDelayBtn.addEventListener('click', () => {
         clearTimeout(delayTimeout);
@@ -111,10 +110,11 @@ async function initialize() {
 async function finishLoading() {
     if (isFinishing) return;
     isFinishing = true;
+    console.log('(Load Delay has Ended)');
 
-    window.dispatchEvent(new CustomEvent('storeLoaded'));
-
-    tabs.goto('selectSpace', { logPrevious: false, removePrevious: true });
+    // THIS IS TEMPORARILY SET TO 'workspace'. SET TO 'selectSpace' WHEN DONE
+    // DEVELOPING THE WORKSPACE MENU
+    tabs.goto('workspace', { logPrevious: false, removePrevious: true });
 }
 
 window.addEventListener('DOMContentLoaded', () => {

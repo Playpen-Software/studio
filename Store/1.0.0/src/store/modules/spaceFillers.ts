@@ -1,5 +1,6 @@
-import type { preferenceUpdateEventDetail } from '../../types/setting';
+import type { preferenceUpdateEventDetail } from './playpenPreferences';
 import { preferences } from './playpenPreferences';
+import { getActiveTab } from './tabs';
 
 function wait(ms: number) { return new Promise((resolve) => { setTimeout(resolve, ms); }); }
 
@@ -44,6 +45,8 @@ let lastCombinationIndex: number | null = null;
 const floatAnimations = ['float', 'float-slow', 'float-fast', 'float-subtle'];
 
 export async function fillSpaceContainer() {
+    console.log(getActiveTab());
+    const disabledInTabs = preferences['spaceFillersDisabledTabs'] || [];
     const callId = ++currentCallId;
     const container = document.getElementById('space-filler-container') as HTMLDivElement;
     if (preferences['useSpaceFillerBlur']) {
@@ -52,7 +55,7 @@ export async function fillSpaceContainer() {
         container.classList.remove('use-blur');
     }
     if (!container) return;
-    if (!preferences['spaceFillersEnabled']) {
+    if (!preferences['spaceFillersEnabled'] || disabledInTabs.includes(getActiveTab())) {
         container.classList.remove('is-fading-out');
         container.style.animationDuration = '';
         container.replaceChildren();

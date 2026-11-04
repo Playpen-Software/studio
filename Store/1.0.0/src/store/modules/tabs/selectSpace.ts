@@ -1,4 +1,4 @@
-import { populateSVGs } from "../fileLoader";
+import { populateSVGs } from "../playpen";
 import { showNotification, showPopup } from "../notifications";
 import { preferences } from "../playpenPreferences";
 
@@ -90,7 +90,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
     if (!spaces.length) {
         spacesList.innerHTML = `
         <div class="center standalone"${animate ? ` style="animation: ${fadeInAnimation}"` : ''}>
-            <svgPlaceholder class="playpen-standalone-icon">assets/svg/spaces.svg</svgPlaceholder>
+            <svgPlaceholder class="playpen-standalone-icon">assets/svg/space.svg</svgPlaceholder>
             <p>You have no spaces. Click 'Create New Space' at the bottom right of this menu to get started!</p>
         </div>
         `;
@@ -146,7 +146,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
         identifierEl.innerText = `ID: ${space.id}`;
 
         continueBtn.textContent = 'Open';
-        continueBtn.className = 'playpen-primary-button primary continue-button';
+        continueBtn.className = 'playpen-primary-button primary-focus continue-button';
         // continueBtn.onclick = () => gotoWorkspace(space.id);
 
         deleteBtn.textContent = 'Delete';

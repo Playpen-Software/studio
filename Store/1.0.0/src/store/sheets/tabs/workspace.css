@@ -2,13 +2,10 @@
     width: 100%;
     height: 100%;
 
-    /* Hide Space Fillers within the Workspace to eliminate distractions,
-    since this is a very dense tab, it prevents visual fatigue */
-    background: var(--background-base);
-
     #workspace-tabsList {
         display: flex;
         flex-direction: row;
+        gap: var(--gap);
 
         box-sizing: border-box;
         width: 100%;
@@ -17,7 +14,7 @@
         background: var(--background-stack);
         border-bottom: 1px solid var(--background-stack);
 
-        padding: var(--resting-area-padding);
+        padding: calc(var(--resting-area-padding) / 2);
 
         .tabItem {
             display: flex;
@@ -64,28 +61,21 @@
                     height: 100%;
                     aspect-ratio: 1;
                 }
-
-                &:hover {
-                    font-weight: bold;
-                }
             }
         }
 
-        #workspace-newTab {
+        .action-button {
             aspect-ratio: 1;
+            height: 100%;
 
             background: transparent;
             border: none;
 
-            color: var(--text-primary);
-
             svg {
-                height: 100%;
+                height: 16px;
                 aspect-ratio: 1;
-            }
 
-            &:hover {
-                font-weight: bold;
+                fill: var(--text-primary);
             }
         }
     }

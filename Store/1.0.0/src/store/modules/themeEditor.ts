@@ -1,5 +1,7 @@
+import { populateSVGs } from './playpen';
 import { showNotification, showPopup } from './notifications';
-import { preferences, setPreferences } from './playpenPreferences';
+import { preferences, setPreferences, type preferenceUpdateEventDetail } from './playpenPreferences';
+import { getActiveTab, type tabChangeEventDetail } from './tabs';
 
 type ThemeValue = string | number;
 type ThemeVariable = {
@@ -48,25 +50,18 @@ export function init(): void {
         const action = button.dataset['themeAction'];
 
         const task = action === 'edit'
-            ? editThemeVariable(variable)
-            : action === 'copy'
-                ? copyThemeVariable(variable)
-                : action === 'reset'
-                    ? resetThemeVariable(variable.property)
-                    : Promise.resolve();
+        ? editThemeVariable(variable)
+        : action === 'copy'
+        ? copyThemeVariable(variable)
+        : action === 'reset'
+        ? resetThemeVariable(variable.property)
+        : Promise.resolve();
         void task.catch(showThemeError);
     });
 
-    const darkThemeToggle = document.getElementById('settings-enableDarkThemeSupport');
-    darkThemeToggle?.addEventListener('click', event => {
-        event.preventDefault();
-        void setPreferences({ enableDarkThemeSupport: !preferences['enableDarkThemeSupport'] })
-            .catch(showThemeError);
-    });
-
-    window.addEventListener('preferencesUpdate', renderThemeEditor);
     initialized = true;
     renderThemeEditor();
+    applyThemeSettings();
 }
 
 export function applyThemeSettings(): void {
@@ -78,13 +73,119 @@ export function applyThemeSettings(): void {
         else style.setProperty(variable.property, cssValue(variable, value));
     }
 
+    const root = getComputedStyle(document.documentElement);
+    const inversedBackgroundStack = root.getPropertyValue('--background-stack-inverse');
+    const inversedInsetShadow = root.getPropertyValue('--inset-shadow-inverse');
+    const inversedOutsetShadow = root.getPropertyValue('--outset-shadow-inverse');
+
     if (preferences['enableDarkThemeSupport']) {
-        style.setProperty('--background-stack', 'color-mix(in srgb, transparent, white var(--background-color-step-amount, 12%))');
-        style.setProperty('--background-stack-inverse', 'color-mix(in srgb, transparent, black var(--background-color-step-amount, 12%))');
+        style.setProperty('--background-stack', inversedBackgroundStack);
+        style.setProperty('--inset-shadow', inversedInsetShadow)
+        style.setProperty('--outset-shadow', inversedOutsetShadow);
     } else {
         style.removeProperty('--background-stack');
-        style.removeProperty('--background-stack-inverse');
+        style.removeProperty('--inset-shadow');
+        style.removeProperty('--outset-shadow');
     }
+}
+
+export async function updateDarkThemeSupport(): Promise<void> {
+    const currentOverrides = getThemeVariables();
+    const backgroundVariable = themeVariables.find(variable => variable.property === '--background-base');
+    const textVariable = themeVariables.find(variable => variable.property === '--text-primary');
+    if (!backgroundVariable || !textVariable) return;
+
+    const background = String(getCurrentThemeValue(backgroundVariable));
+    const text = String(getCurrentThemeValue(textVariable));
+
+    const isDark = Boolean(preferences['enableDarkThemeSupport']);
+
+    if (isLightColor(background) === isDark) {
+        currentOverrides['--background-base'] = invertLightnessHex(background);
+    }
+
+    if (isLightColor(text) === !isDark) {
+        currentOverrides['--text-primary'] = invertLightnessHex(text);
+    }
+
+    await setPreferences({ themeVariables: currentOverrides });
+    updateThemePreviews();
+}
+
+function isLightColor(hex: string): boolean {
+    const rgb = hexToRgb(hex);
+    const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+    return brightness >= 128;
+}
+
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+        hex = hex.split('').map(char => char + char).join('');
+    }
+    const num = parseInt(hex, 16);
+    return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+    };
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+    const toHex = (c: number) => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+    h /= 360; s /= 100; l /= 100;
+    let r: number, g: number, b: number;
+
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: r * 255, g: g * 255, b: b * 255 };
+}
+
+function invertLightnessHex(hex: string): string {
+    const rgb = hexToRgb(hex);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    hsl.l = 100 - hsl.l;
+
+    const newRgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+    return rgbToHex(newRgb.r, newRgb.g, newRgb.b);
 }
 
 export { applyThemeSettings as applyThemeVariables };
@@ -127,6 +228,7 @@ function renderThemeEditor(): void {
     }
     if (!container) return;
     container.replaceChildren(...themeVariables.map(createThemeCard));
+    populateSVGs();
 }
 
 function createThemeCard(variable: ThemeVariable): HTMLElement {
@@ -135,8 +237,9 @@ function createThemeCard(variable: ThemeVariable): HTMLElement {
     card.dataset['themeProperty'] = variable.property;
 
     const preview = document.createElement('div');
-    preview.className = 'image center standalone';
+    preview.className = 'playpen-theme-preview image center standalone';
     preview.setAttribute('aria-label', `${variable.name} preview`);
+    preview.setAttribute('data-preview-variable', JSON.stringify(variable));
     preview.appendChild(document.createElement('span'));
     updateThemePreview(preview, variable);
 
@@ -184,14 +287,14 @@ function createActionButton(label: string, action: string, name: string): HTMLBu
 async function editThemeVariable(variable: ThemeVariable): Promise<void> {
     const value = getCurrentThemeValue(variable);
     const options = variable.type === 'select'
-        ? variable.options!.map(option => ({
-            content: option.replaceAll('-', ' ').replace(/\b\w/g, character => character.toUpperCase()),
-            value: option
-        }))
-        : undefined;
+    ? variable.options!.map(option => ({
+        content: option.replaceAll('-', ' ').replace(/\b\w/g, character => character.toUpperCase()),
+        value: option
+    }))
+    : undefined;
     const inputProps = variable.type === 'range'
-        ? { value: value as number, min: variable.min, max: variable.max, step: variable.step ?? 'any' }
-        : { value };
+    ? { value: value as number, min: variable.min, max: variable.max, step: variable.step ?? 'any' }
+    : { value };
     const updated = await showPopup<ThemeValue>(
         `Edit ${variable.name}`,
         variable.description,
@@ -213,6 +316,18 @@ async function resetThemeVariable(property: string): Promise<void> {
     await setPreferences({ themeVariables: variables });
 }
 
+export function updateThemePreviews() {
+    const previews = document.querySelectorAll('.playpen-theme-preview');
+    previews.forEach(function (preview) {
+        const previewEl = preview as HTMLElement;
+        const variableAttribute = previewEl.getAttribute('data-preview-variable');
+        if (variableAttribute) {
+            const variable = JSON.parse(variableAttribute);
+            updateThemePreview(previewEl, variable);
+        }
+    });
+}
+
 function updateThemePreview(preview: HTMLElement, variable: ThemeVariable): void {
     const value = getCurrentThemeValue(variable);
     const css = cssValue(variable, value);
@@ -222,13 +337,13 @@ function updateThemePreview(preview: HTMLElement, variable: ThemeVariable): void
         case '--brand-primary':
         case '--background-base': preview.style.backgroundColor = String(value); break;
         case '--text-primary':
-            preview.style.backgroundColor = 'var(--background-base)';
-            preview.style.color = String(value);
-            break;
+        preview.style.backgroundColor = 'var(--background-base)';
+        preview.style.color = String(value);
+        break;
         case '--text-tertiary':
-            preview.style.backgroundColor = 'var(--brand-primary)';
-            preview.style.color = String(value);
-            break;
+        preview.style.backgroundColor = 'var(--brand-primary)';
+        preview.style.color = String(value);
+        break;
         case '--outline-color': preview.style.border = `4px solid ${String(value)}`; break;
         case '--radius': preview.style.borderRadius = css; break;
         case '--outline-width': preview.style.outline = `${css} solid var(--outline-color)`; break;
@@ -257,8 +372,8 @@ function isValidThemeValue(variable: ThemeVariable, value: unknown): value is Th
     if (variable.type === 'color') return typeof value === 'string' && /^#[\da-f]{6}$/i.test(value);
     if (variable.type === 'select') return typeof value === 'string' && variable.options?.includes(value) === true;
     return typeof value === 'number' && Number.isFinite(value) &&
-        variable.min !== undefined && variable.max !== undefined &&
-        value >= variable.min && value <= variable.max;
+    variable.min !== undefined && variable.max !== undefined &&
+    value >= variable.min && value <= variable.max;
 }
 
 function cssValue(variable: ThemeVariable, value: ThemeValue): string {
@@ -273,3 +388,19 @@ function showThemeError(error: unknown): void {
     console.error('Theme setting action failed:', error);
     showNotification('The theme setting could not be changed.', 'error');
 }
+
+window.addEventListener('storeLoaded', init);
+window.addEventListener('preferencesUpdate', (event) => {
+    if (getActiveTab() !== 'settings_theme') return;
+    applyThemeSettings();
+    const eventDetails = event as CustomEvent<preferenceUpdateEventDetail>;
+    const { preference } = eventDetails.detail;
+    if (preference == 'enableDarkThemeSupport') updateDarkThemeSupport();
+});
+window.addEventListener('tabChange', (event) => {
+    const eventDetails = event as CustomEvent<tabChangeEventDetail>;
+    const { tabId } = eventDetails.detail;
+    if (tabId === 'settings_theme') {
+        renderThemeEditor();
+    }
+});

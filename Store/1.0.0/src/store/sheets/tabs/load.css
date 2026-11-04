@@ -1,13 +1,15 @@
 #loadMenu {
     flex-direction: column;
-    gap: var(--gap, 5px);
+    gap: var(--gap);
 
     height: 100%;
     width: 100%;
 
-    padding: var(--resting-area-padding, 5px);
+    padding: var(--resting-area-padding);
 
-    animation: playpenFadeIn 0.8s var(--transition-easing-style, ease-out) forwards;
+    &:not(.is-fading-out) {
+        animation: playpenFadeIn 0.8s var(--transition-easing-style) forwards;
+    }
 
     .playpen-standalone-icon {
         fill: var(--brand-primary);
@@ -18,7 +20,7 @@
     }
 
     h1 {
-        color: var(--brand-primary, #2d9eef);
+        color: var(--brand-primary);
         transform: scale(1.5);
 
         sup {
