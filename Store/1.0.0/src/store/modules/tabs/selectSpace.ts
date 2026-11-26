@@ -2,9 +2,10 @@ import { populateSVGs } from "../playpen";
 import { showNotification, showPopup } from "../notifications";
 import { preferences } from "../playpenPreferences";
 
-import { electroview, exit, restart } from "../index";
+import { electroview } from "..";
 import { type tabChangeEventDetail } from "../tabs";
 import { createRandomSpace } from "../tabs/createSpace";
+import { enqueueInventoryDelta } from '../inventoryQueue';
 
 function wait(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,8 +20,6 @@ const itemDelay = 15; // Adjust this (in ms) to make the staggered pops faster o
 
 const sourceCodeBtn = document.getElementById('selectSpace-source') as HTMLButtonElement;
 const issuesBtn = document.getElementById('selectSpace-issues') as HTMLButtonElement;
-const exitBtn = document.getElementById('selectSpace-exit') as HTMLButtonElement;
-const restartBtn = document.getElementById('selectSpace-restart') as HTMLButtonElement;
 const refreshBtn = document.getElementById('selectSpace-refresh') as HTMLButtonElement;
 const createBtn = document.getElementById('selectSpace-create') as HTMLButtonElement;
 const searchInput = document.getElementById('selectSpace-search') as HTMLButtonElement;
@@ -40,9 +39,6 @@ export async function init() {
     websiteBtn.addEventListener('click', function() {
         window.open('https://www.playpensoftware.com/studio');
     });
-
-    exitBtn.addEventListener('click', exit);
-    restartBtn.addEventListener('click', restart);
 
     createBtn.addEventListener('click', async (event: MouseEvent) => {
         if (!event.shiftKey) return;
@@ -86,16 +82,14 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
     spacesList.innerHTML = '';
 
     // Fetch spaces list via RPC
-    const spaces = await electroview.rpc!.request.listSpaces();
+    const spaces = await electroview.rpc!.request.listSpaces({});
     if (!spaces.length) {
         spacesList.innerHTML = `
         <div class="center standalone"${animate ? ` style="animation: ${fadeInAnimation}"` : ''}>
-            <svgPlaceholder class="playpen-standalone-icon">assets/svg/space.svg</svgPlaceholder>
             <p>You have no spaces. Click 'Create New Space' at the bottom right of this menu to get started!</p>
         </div>
         `;
         createBtn.focus();
-        populateSVGs();
     }
 
     // Sequentially build and append items so they pop up one by one
@@ -135,7 +129,7 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
         iconEl.alt = '';
 
         editIndicatorEl.className = 'space-icon-edit';
-        editSvgPlaceholderEl.textContent = 'assets/svg/selectSpace/edit.svg';
+        editSvgPlaceholderEl.textContent = 'assets/svg/edit.svg';
         editIndicatorEl.appendChild(editSvgPlaceholderEl);
         iconButtonEl.append(iconEl, editIndicatorEl);
 
@@ -165,7 +159,13 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
 
             if (newName && newName !== space.name) {
                 try {
-                    await electroview.rpc!.request.updateSpace({ id: space.id, updates: { name: newName } });
+                    const result = await enqueueInventoryDelta({
+                        entity: 'space',
+                        action: 'update',
+                        entityId: space.id,
+                        data: { name: newName }
+                    });
+                    if (result.status === 'stale') throw new Error('A newer change already updated this space.');
                     await populateSpacesList(true);
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);
@@ -188,7 +188,12 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
 
             if (verified) {
                 try {
-                    await electroview.rpc!.request.deleteSpace(space.id);
+                    const result = await enqueueInventoryDelta({
+                        entity: 'space',
+                        action: 'delete',
+                        entityId: space.id
+                    });
+                    if (result.status === 'stale') throw new Error('A newer change already updated this space.');
                     showNotification(`Deleted Space '${space.name}'`);
                     populateSpacesList(true, preferences['transitionAnimations'] && !e.shiftKey);
                 } catch (err) {
@@ -212,10 +217,13 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
             );
 
             if (files === 'reset') {
-                await electroview.rpc!.request.updateSpace({
-                    id: space.id,
-                    updates: { imageBase64: "" }
+                const result = await enqueueInventoryDelta({
+                    entity: 'space',
+                    action: 'update',
+                    entityId: space.id,
+                    data: { imageBase64: "" }
                 });
+                if (result.status === 'stale') throw new Error('A newer change already updated this space.');
                 showNotification(`Reset image for space ${space.name}`);
                 populateSpacesList();
                 return;
@@ -226,10 +234,13 @@ async function populateSpacesList(fadeOut?: boolean, animate: boolean = preferen
 
                 try {
                     const imageBase64 = await convertFileToBase64(file);
-                    await electroview.rpc!.request.updateSpace({
-                        id: space.id,
-                        updates: { imageBase64 }
+                    const result = await enqueueInventoryDelta({
+                        entity: 'space',
+                        action: 'update',
+                        entityId: space.id,
+                        data: { imageBase64 }
                     });
+                    if (result.status === 'stale') throw new Error('A newer change already updated this space.');
                     await populateSpacesList(true);
                 } catch (error) {
                     const message = error instanceof Error ? error.message : String(error);

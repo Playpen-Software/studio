@@ -1,0 +1,10 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path="vcpkg.json" />
+  </Folder>
+  <Project Path="StoreLauncher.vcxproj" Id="2e8a3419-3298-4ee4-9304-06c2336e9a59" />
+</Solution>

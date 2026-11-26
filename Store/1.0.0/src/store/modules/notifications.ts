@@ -161,7 +161,8 @@ export function showPopup<T = any>(
         { content: "Yes", value: true, highlighted: true }
     ],
     inputProps: PopupInputAttributes = {},
-    center: boolean = false
+    center: boolean = false,
+    opposeUserTheme = false
 ): Promise<T | undefined> {
     const activeElement = document.activeElement;
     const anchor = activeElement instanceof HTMLElement
@@ -173,6 +174,7 @@ export function showPopup<T = any>(
     return new Promise((resolve) => {
         const popupContainer = document.createElement("div");
         popupContainer.className = "popup-container";
+        if (opposeUserTheme) popupContainer.classList.add('oppose-user-theme');
 
         const popup = document.createElement("div");
         popup.className = "popup";

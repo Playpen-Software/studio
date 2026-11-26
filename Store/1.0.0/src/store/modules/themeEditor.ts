@@ -1,10 +1,12 @@
 import { populateSVGs } from './playpen';
 import { showNotification, showPopup } from './notifications';
-import { preferences, setPreferences, type preferenceUpdateEventDetail } from './playpenPreferences';
+import { preferences, registerPreferenceDefaults, setPreferences, type preferenceUpdateEventDetail } from './playpenPreferences';
 import { getActiveTab, type tabChangeEventDetail } from './tabs';
 
-type ThemeValue = string | number;
-type ThemeVariable = {
+registerPreferenceDefaults({ themeVariables: {}, enableDarkThemeSupport: false });
+
+export type ThemeValue = string | number;
+export type ThemeVariable = {
     name: string;
     property: string;
     description: string;
@@ -53,7 +55,7 @@ export function init(): void {
         ? editThemeVariable(variable)
         : action === 'copy'
         ? copyThemeVariable(variable)
-        : action === 'reset'
+        : action === 'delete'
         ? resetThemeVariable(variable.property)
         : Promise.resolve();
         void task.catch(showThemeError);
@@ -212,14 +214,17 @@ export async function setThemeVariables(updates: Record<string, unknown>): Promi
     }
 
     await setPreferences({ themeVariables: { ...getThemeVariables(), ...validatedUpdates } });
+    updateThemePreviews();
 }
 
 export async function resetThemeVariables(): Promise<void> {
     await setPreferences({ themeVariables: {} });
+    updateThemePreviews();
 }
 
 export async function resetThemeSettings(): Promise<void> {
     await setPreferences({ themeVariables: {}, enableDarkThemeSupport: false });
+    updateThemePreviews();
 }
 
 function renderThemeEditor(): void {
@@ -229,6 +234,7 @@ function renderThemeEditor(): void {
     if (!container) return;
     container.replaceChildren(...themeVariables.map(createThemeCard));
     populateSVGs();
+    updateThemePreviews();
 }
 
 function createThemeCard(variable: ThemeVariable): HTMLElement {
@@ -241,7 +247,6 @@ function createThemeCard(variable: ThemeVariable): HTMLElement {
     preview.setAttribute('aria-label', `${variable.name} preview`);
     preview.setAttribute('data-preview-variable', JSON.stringify(variable));
     preview.appendChild(document.createElement('span'));
-    updateThemePreview(preview, variable);
 
     const details = document.createElement('div');
     details.className = 'details-container';
@@ -261,7 +266,7 @@ function createThemeCard(variable: ThemeVariable): HTMLElement {
     actions.append(
         createActionButton('Edit', 'edit', variable.name),
         createActionButton('Copy', 'copy', variable.name),
-        createActionButton('Reset', 'reset', variable.name)
+        createActionButton('Reset', 'delete', variable.name)
     );
 
     const primary = document.createElement('div');
@@ -279,7 +284,7 @@ function createActionButton(label: string, action: string, name: string): HTMLBu
     button.setAttribute('aria-label', `${label} ${name}`);
 
     const icon = document.createElement('svgPlaceholder');
-    icon.textContent = `assets/svg/settings/${action}.svg`;
+    icon.textContent = `assets/svg/${action}.svg`;
     button.append(icon, document.createTextNode(label));
     return button;
 }
@@ -314,6 +319,7 @@ async function resetThemeVariable(property: string): Promise<void> {
     const variables = getThemeVariables();
     delete variables[property];
     await setPreferences({ themeVariables: variables });
+    updateThemePreviews();
 }
 
 export function updateThemePreviews() {
@@ -391,11 +397,12 @@ function showThemeError(error: unknown): void {
 
 window.addEventListener('storeLoaded', init);
 window.addEventListener('preferencesUpdate', (event) => {
-    if (getActiveTab() !== 'settings_theme') return;
-    applyThemeSettings();
     const eventDetails = event as CustomEvent<preferenceUpdateEventDetail>;
     const { preference } = eventDetails.detail;
-    if (preference == 'enableDarkThemeSupport') updateDarkThemeSupport();
+    if (preference !== 'themeVariables' && preference !== 'enableDarkThemeSupport') return;
+    applyThemeSettings();
+    if (preference === 'enableDarkThemeSupport') updateDarkThemeSupport();
+    if (getActiveTab() === 'settings_theme') updateThemePreviews();
 });
 window.addEventListener('tabChange', (event) => {
     const eventDetails = event as CustomEvent<tabChangeEventDetail>;

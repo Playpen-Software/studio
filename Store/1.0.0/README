@@ -1,0 +1,19 @@
+Playpen Store 1.0.0
+
+DEVELOPER NOTES:
+1. Please read the notes in ``./electron.config.ts``
+2. If the app refuses to load and just shows broken SVGs, try running with ``bun run dev-linux-fix`` instead of ``bun run dev``
+
+INVENTORY DATA FLOW:
+- SQLite is the default on-device database. Its schema migrates existing item tables to include an optional icon and an ordered image gallery.
+- Inventory writes use timestamped deltas through ``applyInventoryDelta``. Quantity changes are increments/decrements, not replacement values.
+- The frontend stores unsent deltas in local storage and retries them in order. SQLite records applied/stale delta IDs transactionally, so retries are idempotent.
+- Entity versions retain the accepted timestamp, including deletion tombstones. An older delta is discarded if a newer timestamp has already changed that entity.
+- ``setDatabase({ database: 'remote', remoteUrl })`` selects a WebSocket database. The server is not included in this project; the client uses the request envelope below and expects the server to implement the corresponding inventory methods.
+
+REMOTE WEBSOCKET ENVELOPE:
+```json
+{"type":"request","id":"request-uuid","method":"inventory.applyDelta","params":{"id":"delta-uuid","timestamp":1730000000000,"entity":"item","action":"adjustQuantity","entityId":42,"data":{"amount":1}}}
+{"type":"response","id":"request-uuid","ok":true,"result":{"status":"applied","value":true}}
+```
+For failures, respond with ``{"type":"response","id":"request-uuid","ok":false,"error":"message"}``. Other request methods are namespaced, such as ``spaces.list``, ``categories.query``, and ``items.getById``. Prefer ``wss://`` for non-local servers.

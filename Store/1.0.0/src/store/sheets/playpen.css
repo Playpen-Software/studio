@@ -40,7 +40,7 @@
     --background-secondary: color-mix(in srgb, var(--background-base), black var(--background-color-step-amount));
     --background-stack: color-mix(in srgb, transparent, black var(--background-color-step-amount));
 
-    --radius: 8px;
+    --radius: 4px;
 
     --blur: 5px;
 
@@ -287,26 +287,42 @@ hr {
     align-items: center;
     justify-content: center;
     gap: calc(var(--gap) * 1.5);
+
+    box-sizing: border-box;
+    min-width: 0;
+
     border-radius: var(--radius);
+
     font-family: var(--font-primary);
     font-size: 16px;
     text-decoration: none;
+
     cursor: pointer;
     padding: var(--clickable-area-padding);
 
     svg, img {
+        flex-shrink: 0;
         width: 1.8em;
         height: 1.8em;
+        overflow: visible;
+    }
 
-        &:disabled {
-            fill: var(--text-secondary);
+    svg {
+        &.no-fill {
+            fill: none;
+        }
+
+        &.stroke {
+            stroke: var(--text-primary);
         }
     }
 
-    .primary svg, .primary img {
-        &:disabled {
-            fill: var(--text-quaternary);
-        }
+    &:disabled svg {
+        fill: var(--text-secondary);
+    }
+
+    .primary-focus:disabled svg {
+        fill: var(--text-quaternary);
     }
 
     &.icon-button {
@@ -317,14 +333,13 @@ hr {
 
 .playpen-primary-button {
     background: var(--background-stack);
-    border: 2px solid transparent;
+    border: none;
     color: var(--text-primary);
     transition: background var(--transition), box-shadow var(--transition);
 
     &.danger {
         background: var(--background-base);
-        border-color: var(--danger-primary);
-        color: var(--danger-primary);
+        color: whivar(--danger-primary);
         font-weight: bold;
 
         svg {
@@ -339,10 +354,10 @@ hr {
     &.danger-primary {
         background: var(--danger-primary);
         border-color: transparent;
-        color: var(--text-tertiary);
+        color: white;
 
         svg {
-            fill: var(--text-tertiary);
+            fill: white;
         }
 
         &:active {
@@ -354,11 +369,7 @@ hr {
         fill: var(--text-primary);
     }
 
-    &:hover:not(:disabled) {
-        box-shadow: var(--inset-shadow);
-    }
-
-    &:active {
+    &:hover:not(:disabled), &:focus:not(:disabled), &:active {
         box-shadow: var(--inset-shadow);
     }
 
@@ -437,21 +448,6 @@ hr {
     }
 }
 
-.playpen-labeled-divider {
-    position: relative;
-    width: 100%;
-
-    .label {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-
-        background: var(--background-stack);
-
-        transform: translate(-50%, -50%);
-    }
-}
-
 .playpen-unordered-list li {
     margin-block: var(--gap);
 
@@ -503,9 +499,8 @@ hr {
         padding: var(--clickable-area-padding);
         transition: box-shadow var(--transition), border-color var(--transition);
 
-        &:focus {
+        &:hover:not(:disabled), &:focus:not(:disabled), &:active {
             box-shadow: var(--inset-shadow);
-            border-color: var(--background-stack);
         }
 
         &:disabled {
@@ -809,7 +804,7 @@ input[type="range"] {
     padding-right: 2.5rem;
     transition: background var(--transition), box-shadow var(--transition), border-color var(--transition);
 
-    &:hover:not(:disabled) {
+    &:hover:not(:disabled), &:focus:not(:disabled), &:active {
         box-shadow: var(--inset-shadow);
     }
 
@@ -913,7 +908,6 @@ input[type="range"] {
 
 code {
     background: var(--background-stack);
-    color: var(--text-primary);
     border-radius: var(--radius);
     padding: calc(var(--resting-area-padding) / 2);
 

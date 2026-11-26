@@ -10,8 +10,9 @@ import Database from 'bun:sqlite';
 import * as updater from "./updater";
 import * as utils from "./updater-utils";
 import { type UpdaterRPCType } from '../types/updater-rpc-types';
-import { type StoreRPCType } from '../types/store-rpc-types';
-import type { DatabaseType } from '../types/store-types';
+import { type DatabaseType, type StoreRPCType } from '../types/store-rpc-types';
+import type { InventoryDelta } from '../types/inventory-delta';
+import { RemoteDatabaseClient } from './remote-database';
 
 const legacyStudioPath = path.join(os.homedir(), 'nvxstdo');
 const legacyStorePath = path.join(legacyStudioPath, 'store');
@@ -53,17 +54,25 @@ const storeFileAccess: StoreFileAccess[] = [
 ] as const;
 
 type SqliteDatabaseApi = ReturnType<typeof import('./database-driver').createSqliteDatabaseApi>;
+type NewInventoryDelta = InventoryDelta extends infer Delta
+	? Delta extends InventoryDelta
+		? Omit<Delta, 'id' | 'timestamp'>
+		: never
+	: never;
 
 let functions: SqliteDatabaseApi | null = null;
 let db: Database | null = null;
+let activeDB: DatabaseType | null = null;
+let remoteDatabase: RemoteDatabaseClient | null = null;
+let remoteDatabaseUrl: string | undefined;
 let initialization: Promise<void> | null = null;
 let databaseQueue: Promise<void> = Promise.resolve();
 let preferencesWrite: Promise<void> = Promise.resolve();
 let storeFileWrite: Promise<void> = Promise.resolve();
 let resettingAppData = false;
 
-let activeDB: DatabaseType | null = null;
 let activeDatabasePath: string | undefined;
+let lastBackendDeltaTimestamp = 0;
 
 function validateStoreFilePath(relativePath: string): string[] {
 	if (typeof relativePath !== 'string' || relativePath.length === 0) {
@@ -308,13 +317,39 @@ function enqueueDatabaseTask<T>(task: () => Promise<T> | T): Promise<T> {
 	return result;
 }
 
-function withDatabase<T>(operation: (api: SqliteDatabaseApi) => Promise<T> | T): Promise<T> {
+function withDatabase<T>(
+	operation: (api: SqliteDatabaseApi) => Promise<T> | T,
+	remoteRequest?: { method: string; params: unknown }
+): Promise<T> {
 	return enqueueDatabaseTask(() => {
+		if (activeDB === 'remote') {
+			if (!remoteDatabase || !remoteRequest) {
+				throw new Error('The remote database command is unavailable for this operation.');
+			}
+			return remoteDatabase.request<T>(remoteRequest.method, remoteRequest.params);
+		}
 		if (!db || !functions) {
 			throw new Error('The database is not ready.');
 		}
 		return operation(functions);
 	});
+}
+
+function createServerDelta(delta: NewInventoryDelta): InventoryDelta {
+	const timestamp = Math.max(Date.now(), lastBackendDeltaTimestamp + 1);
+	lastBackendDeltaTimestamp = timestamp;
+	return {
+		...delta,
+		id: crypto.randomUUID(),
+		timestamp
+	} as InventoryDelta;
+}
+
+function routeInventoryDelta(delta: InventoryDelta) {
+	return withDatabase(
+		api => api.applyInventoryDelta(delta),
+		{ method: 'inventory.applyDelta', params: delta }
+	);
 }
 
 async function closeDatabase(): Promise<void> {
@@ -326,9 +361,23 @@ async function closeDatabase(): Promise<void> {
 	activeDatabasePath = undefined;
 }
 
-async function configureDatabase(database: DatabaseType, databasePath?: string): Promise<void> {
+async function configureDatabase(
+	database: DatabaseType,
+	databasePath?: string,
+	remoteUrl?: string
+): Promise<void> {
 	if (database === 'remote') {
-		throw new Error('Remote database support is intentionally disabled. Route future database calls here when the remote implementation is ready.');
+		if (!remoteUrl) throw new Error('A WebSocket URL is required for a remote database.');
+		const parsedRemoteUrl = new URL(remoteUrl);
+		if (parsedRemoteUrl.protocol !== 'ws:' && parsedRemoteUrl.protocol !== 'wss:') {
+			throw new Error('The remote database URL must use ws:// or wss://.');
+		}
+		const client = new RemoteDatabaseClient(remoteUrl);
+		remoteDatabase?.close();
+		remoteDatabase = client;
+		remoteDatabaseUrl = remoteUrl;
+		activeDB = 'remote';
+		return;
 	}
 
 	if (database === 'sqlite') {
@@ -342,6 +391,9 @@ async function configureDatabase(database: DatabaseType, databasePath?: string):
 			db = localDb;
 			functions = localFunctions;
 			activeDB = 'sqlite';
+			remoteDatabase?.close();
+			remoteDatabase = null;
+			remoteDatabaseUrl = undefined;
 			activeDatabasePath = databasePath;
 		} catch (error) {
 			localDb.close();
@@ -361,8 +413,8 @@ async function performAppDataReset(): Promise<void> {
 			const resolvedStudioPath = path.resolve(studioPath);
 			const resolvedStorePath = path.resolve(storePath);
 			const pathsMatch = (left: string, right: string) => process.platform === 'win32'
-				? left.toLocaleLowerCase('en-US') === right.toLocaleLowerCase('en-US')
-				: left === right;
+			? left.toLocaleLowerCase('en-US') === right.toLocaleLowerCase('en-US')
+			: left === right;
 			const unsafePaths = [
 				path.parse(resolvedStudioPath).root,
 				path.resolve(os.homedir()),
@@ -386,9 +438,13 @@ async function performAppDataReset(): Promise<void> {
 
 			const previousDatabase = activeDB ?? 'sqlite';
 			const previousDatabasePath = activeDatabasePath;
+			const previousRemoteUrl = remoteDatabaseUrl;
 			let databaseWasClosed = false;
 			try {
 				await closeDatabase();
+				remoteDatabase?.close();
+				remoteDatabase = null;
+				remoteDatabaseUrl = undefined;
 				databaseWasClosed = true;
 				await preferencesWrite;
 				await storeFileWrite;
@@ -400,7 +456,7 @@ async function performAppDataReset(): Promise<void> {
 			} catch (error) {
 				if (databaseWasClosed) {
 					try {
-						await configureDatabase(previousDatabase, previousDatabasePath);
+						await configureDatabase(previousDatabase, previousDatabasePath, previousRemoteUrl);
 					} catch (recoveryError) {
 						throw new AggregateError(
 							[error, recoveryError],
@@ -469,7 +525,19 @@ const storeRPC = BrowserView.defineRPC<StoreRPCType>({
 				return true;
 			},
 			async resetInventory() {
-				return withDatabase(api => api.resetDatabase());
+				return withDatabase(
+					api => api.resetDatabase(),
+					{ method: 'inventory.reset', params: {} }
+				);
+			},
+			async applyInventoryDelta(delta: InventoryDelta) {
+				return routeInventoryDelta(delta);
+			},
+			async getInventoryQueueStatus() {
+				return withDatabase(
+					api => api.getInventoryQueueStatus(),
+					{ method: 'inventory.getQueueStatus', params: {} }
+				);
 			},
 			async resetAppData() {
 				await performAppDataReset();
@@ -482,19 +550,51 @@ const storeRPC = BrowserView.defineRPC<StoreRPCType>({
 				return manageStoreFile(request);
 			},
 			async createSpace({ name, imageBase64 = null }: { name: string; imageBase64?: string | null }) {
-				return withDatabase(api => api.createSpace(name, imageBase64));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'space',
+					action: 'create',
+					data: { name, imageBase64 }
+				}));
+				if (typeof result.value !== 'number' && typeof result.value !== 'bigint') {
+					throw new Error('The database did not return the new space identifier.');
+				}
+				return result.value;
 			},
 			async updateSpace({ id, updates }: {
 				id: number | bigint;
 				updates: { name?: string; imageBase64?: string | null };
 			}) {
-				return withDatabase(api => api.updateSpace(id, updates));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'space',
+					action: 'update',
+					entityId: id,
+					data: updates
+				}));
+				return result.status !== 'stale' && result.value === true;
 			},
-			async listSpaces() {
-				return withDatabase(api => api.listSpaces());
+			async listSpaces({ cap, index }: { cap?: number; index?: number }) {
+				return withDatabase(api => api.listSpaces(cap, index), {
+					method: 'spaces.list',
+					params: { cap, index }
+				});
+			},
+			async querySpaces({ options = {}, cap, index }: {
+				options?: import('./database-driver').QueryOptions;
+				cap?: number;
+				index?: number;
+			}) {
+				return withDatabase(api => api.querySpaces(options, cap, index), {
+					method: 'spaces.query',
+					params: { options, cap, index }
+				});
 			},
 			async deleteSpace(id: number | bigint) {
-				return withDatabase(api => api.deleteSpace(id));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'space',
+					action: 'delete',
+					entityId: id
+				}));
+				return result.status !== 'stale' && result.value === true;
 			},
 			async createCategory({
 				name,
@@ -507,56 +607,166 @@ const storeRPC = BrowserView.defineRPC<StoreRPCType>({
 				parentCategoryId?: number | bigint | null;
 				attributes?: import('./database-driver').CategoryAttributeInput[];
 			}) {
-				return withDatabase(api => api.createCategory(spaceId, name, parentCategoryId, attributes));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'category',
+					action: 'create',
+					data: { spaceId, name, parentCategoryId, attributes }
+				}));
+				if (typeof result.value !== 'number' && typeof result.value !== 'bigint') {
+					throw new Error('The database did not return the new category identifier.');
+				}
+				return result.value;
 			},
 			async updateCategory({ id, updates }: {
 				id: number | bigint;
 				updates: { name?: string; spaceId?: number | bigint; parentCategoryId?: number | bigint | null };
 			}) {
-				return withDatabase(api => api.updateCategory(id, updates));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'category',
+					action: 'update',
+					entityId: id,
+					data: updates
+				}));
+				return result.status !== 'stale' && result.value === true;
 			},
-			async listCategories(spaceId: number | bigint) {
-				return withDatabase(api => api.listCategories(spaceId));
+			async listCategories({ spaceId, cap, index }: {
+				spaceId: number | bigint;
+				cap?: number;
+				index?: number;
+			}) {
+				return withDatabase(api => api.listCategories(spaceId, cap, index), {
+					method: 'categories.list',
+					params: { spaceId, cap, index }
+				});
+			},
+			async queryCategories({ spaceId, options = {}, cap, index }: {
+				spaceId: number | bigint;
+				options?: import('./database-driver').QueryOptions;
+				cap?: number;
+				index?: number;
+			}) {
+				return withDatabase(api => api.queryCategories(spaceId, options, cap, index), {
+					method: 'categories.query',
+					params: { spaceId, options, cap, index }
+				});
 			},
 			async deleteCategory(id: number | bigint) {
-				return withDatabase(api => api.deleteCategory(id));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'category',
+					action: 'delete',
+					entityId: id
+				}));
+				return result.status !== 'stale' && result.value === true;
 			},
 			async createItem(input: import('./database-driver').ItemInput) {
-				return withDatabase(api => api.createItem(input));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'item',
+					action: 'create',
+					data: input
+				}));
+				if (typeof result.value !== 'number' && typeof result.value !== 'bigint') {
+					throw new Error('The database did not return the new item identifier.');
+				}
+				return result.value;
+			},
+			async updateItem({ id, updates }: {
+				id: number | bigint;
+				updates: {
+					name?: string;
+					categoryId?: number | bigint;
+					reorderPoint?: number;
+					iconBase64?: string | null;
+					galleryBase64?: string[];
+					attributes?: Record<string, string | number | boolean>;
+				};
+			}) {
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'item',
+					action: 'update',
+					entityId: id,
+					data: updates
+				}));
+				return result.status !== 'stale' && result.value === true;
+			},
+			async adjustItemQuantity({ id, amount }: { id: number | bigint; amount: number }) {
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'item',
+					action: 'adjustQuantity',
+					entityId: id,
+					data: { amount }
+				}));
+				return result.status !== 'stale' && result.value === true;
+			},
+			async listItems({ cap, index }: { cap?: number; index?: number }) {
+				return withDatabase(api => api.listItems(cap, index), {
+					method: 'items.list',
+					params: { cap, index }
+				});
+			},
+			async queryItems({ options = {}, cap, index }: {
+				options?: import('../types/store-types').QueryUnifiedOptions;
+				cap?: number;
+				index?: number;
+			}) {
+				return withDatabase(api => api.queryItems(options, cap, index), {
+					method: 'items.query',
+					params: { options, cap, index }
+				});
 			},
 			async deleteItem(id: number | bigint) {
-				return withDatabase(api => api.deleteItem(id));
+				const result = await routeInventoryDelta(createServerDelta({
+					entity: 'item',
+					action: 'delete',
+					entityId: id
+				}));
+				return result.status !== 'stale' && result.value === true;
 			},
 			async getItemById(id: number | bigint) {
-				return withDatabase(api => api.getItemById(id));
+				return withDatabase(api => api.getItemById(id), {
+					method: 'items.getById',
+					params: { id }
+				});
 			},
 			async detectFileVersion(source: string) {
-				return withDatabase(api => api.detectFileVersion(source));
+				return withDatabase(api => api.detectFileVersion(source), {
+					method: 'inventory.detectFileVersion',
+					params: { source }
+				});
 			},
 			async convert({ source, options }: {
 				source: string;
 				options: import('./database-driver').ConvertOptions;
 			}) {
-				return withDatabase(api => api.convert(source, options));
+				return withDatabase(api => api.convert(source, options), {
+					method: 'inventory.convert',
+					params: { source, options }
+				});
 			},
 			async readFile({ path: relativePath }: { path: string }) {
 				const absolutePath = path.resolve(import.meta.dir, '../views/store/', relativePath);
 				const file = Bun.file(absolutePath);
 				return await file.text();
 			},
-			async setDatabase({ database, databasePath }: { database: DatabaseType, databasePath?: string }) {
-				await enqueueDatabaseTask(() => configureDatabase(database, databasePath));
+			async setDatabase({ database, databasePath, remoteUrl }: {
+				database: DatabaseType;
+				databasePath?: string;
+				remoteUrl?: string;
+			}) {
+				await enqueueDatabaseTask(() => configureDatabase(database, databasePath, remoteUrl));
 			},
 			getDatabase() {
 				return activeDB;
 			},
 			async pingServer(): Promise<boolean> {
-				return activeDB === 'sqlite' && !!db;
+				return activeDB === 'sqlite' ? !!db : activeDB === 'remote' && !!remoteDatabase?.connected;
 			}
 		},
 		messages: {
 			closeStore() {
 				if (storeWindow) storeWindow.close();
+			},
+			toggleDevTools() {
+				if (storeWindowInstance) storeWindowInstance.webview.toggleDevTools();
 			}
 		}
 	}
@@ -581,37 +791,41 @@ function getWindowSize() {
 	return { width: returnWidth, height: returnHeight }
 }
 
+let storeWindowInstance: BrowserView;
+
 function openStore() {
-	if (storeWindow) return;
-	const { width, height } = getWindowSize();
-	const { x, y } = utils.getCenterXY(width, height);
-	let appliedInitialSize = false;
+    if (storeWindow) return;
+    const { width, height } = getWindowSize();
+    const { x, y } = utils.getCenterXY(width, height);
+    let appliedInitialSize = false;
 
-	storeWindow = new BrowserWindow({
-		title: "Playpen Store",
-		url: "views://store/store.html",
-		frame: { width, height, x, y },
-		allowedProtocols: { appData: true },
-		rpc: storeRPC
-	});
+    storeWindow = new BrowserWindow({
+        title: "Playpen Store",
+        url: "views://store/store.html",
+        frame: { width, height, x, y },
+        allowedProtocols: { appData: true },
+        rpc: storeRPC
+    });
 
-	const windowInstance = storeWindow;
+    const webview = storeWindow.webview;
 
-	windowInstance.webview.on("dom-ready", () => {
-		if (appliedInitialSize) return;
-		appliedInitialSize = true;
-		windowInstance.setSize(width, height - 1);
-		setTimeout(() => windowInstance.setSize(width, height), 50);
-	});
+    webview.on("dom-ready", () => {
+        console.log("[Store] dom-ready fired, URL:", webview.url);
+        if (appliedInitialSize) return;
+        appliedInitialSize = true;
+        storeWindow?.setSize(width, height - 1);
+        setTimeout(() => storeWindow?.setSize(width, height), 50);
+    });
 }
 
 function openUpdater() {
-	if (updaterWindow) return;
+    if (updaterWindow) return;
+
 	const width = 700;
 	const height = 400;
 	const { x, y } = utils.getCenterXY(width, height);
 
-	const windowInstance = new BrowserWindow({
+	updaterWindow = new BrowserWindow({
 		title: "Playpen Store",
 		url: "views://updater/updater.html",
 		transparent: true,
@@ -625,9 +839,9 @@ function openUpdater() {
 		rpc: updaterRPC
 	});
 
-	updaterWindow = windowInstance;
+    const webview = updaterWindow.webview;
 
-	windowInstance.webview.on('dom-ready', () => {
+	webview.on('dom-ready', () => {
 		void init().catch(error => console.error('Failed to initialize application:', error));
 	});
 }

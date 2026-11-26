@@ -1,0 +1,62 @@
+{
+	"name": "playpen-store",
+	"productName": "Playpen Store",
+	"version": "0.1.2",
+	"description": "Basic Inventory Management App for Startup Businesses",
+	"license": "Apache-2.0",
+	"author": "Playpen Software <bone.christian.c@outlook.com>",
+	"homepage": "https://www.playpensoftware.com/studio",
+	"type": "commonjs",
+	"main": "main.js",
+	"scripts": {
+		"dev": "electron .",
+		"package": "electron-builder"
+	},
+	"build": {
+		"artifactName": "Store-${version}-Setup.exe",
+		"appId": "com.playpensoftware.store",
+		"copyright": "Copyright 2026 Christian Bone",
+		"directories": {
+			"output": "dist"
+		},
+		"files": [
+			"**/*",
+			"!dist/*"
+		],
+		"win": {
+			"target": "nsis",
+			"icon": "favicon.ico"
+		},
+		"linux": {
+			"target": [
+				"AppImage"
+			],
+			"category": "Utility",
+			"icon": "build/icons",
+			"artifactName": "${productName}-${version}-${arch}.${ext}"
+		},
+		"nsis": {
+			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
+			"createDesktopShortcut": true
+		},
+		"icon": "build/icon.ico",
+		"publish": [
+			{
+				"provider": "generic",
+				"url": "https://downloads.playpensoftware.com/studio/store/stable/latest"
+			}
+		]
+	},
+	"devDependencies": {
+		"electron": "^45.1.0",
+		"electron-builder": "^26.18.0"
+	},
+	"dependencies": {
+		"electron-updater": "^6.8.11",
+		"jquery": "^4.0.0"
+	},
+	"allowScripts": {
+		"electron-winstaller@5.4.0": true
+	}
+}

@@ -2,12 +2,11 @@
 import { Electroview } from "electrobun/view";
 import { type StoreRPCType } from '../../types/store-rpc-types';
 
-import { showPopup } from "./notifications";
 import { waitForLoad } from "./playpen";
 
 import * as load from './load';
 
-// Import all modules that listen for events, so electrobun can package them, and all top-level code is ran.
+// Import all modules that listen for events and aren't imported elsewhere, so electrobun can package them, and all top-level code is ran.
 import './tabs/createSpace';
 import './tabs/selectSpace';
 import './tabs/settings';
@@ -41,33 +40,54 @@ export const store = {
     "sessionVersion": "1.0.0"
 }
 
-export async function exit() {
-    const confirmation = await showPopup(
-        "Exiting Playpen Store",
-        "Are you sure you want to exit Playpen Store?", "options",
-        [
-            { content: "Cancel", value: false, highlighted: true },
-            { content: "Exit", value: true }
-        ]
-    );
+import * as tabs from './tabs';
+import { preferences } from "./playpenPreferences";
 
-    if (confirmation === true) {
-        electroview.rpc?.send.closeStore();
-    }
+export function updateDeveloperFunctionExposure() {
+    const functions = {
+        "gotoTab": tabs.goto,
+        "showTab": tabs.show,
+        "hideTab": tabs.hide,
+        "navigateToTabFromURL": tabs.navigateFromURLParams,
+        "forceCriticalError": criticalError
+    };
+
+    const context = window as any;
+    const enableFeatures = Boolean(preferences['enableDeveloperFeatures']);
+
+    Object.entries(functions).forEach(([key, fn]) => {
+        context[key] = enableFeatures ? fn : undefined;
+    });
 }
 
-export async function restart() {
-    const confirmation = await showPopup(
-        'Restart Playpen Store',
-        `All unsaved progress will be lost.`,
-        "options",
-        [
-            { content: "Cancel", value: false, highlighted: true },
-            { content: "Restart", value: true }
-        ]
-    );
+export function criticalError(message = "An unexpected error occured."): void {
+    const messageEl = document.getElementById('criticalError-message') as HTMLElement;
 
-    if (confirmation) window.location.reload();
+    try {
+        tabs.goto('criticalError', { instant: true });
+        if (messageEl) {
+            messageEl.innerText = message;
+        } else {
+            console.error(`Critical Error: ${message}`);
+        }
+    } catch (err) {
+        const errorMessage = err as string;
+        console.error(`Failed to show critical error as styled tab: ${errorMessage}`);
+        console.error(`Critical Error: ${message}`);
+
+        tabs.hideAllTabs({ instant: true });
+        const headerElement = document.createElement('h1');
+        headerElement.innerText = "Store encountered a critical error";
+
+        const fallbackMessageEl = document.createElement('code');
+        fallbackMessageEl.innerText = message;
+
+        const noteEl = document.createElement('span');
+        noteEl.className = "playpen-disclaimer";
+        noteEl.innerText = "You can check your console for more details."
+
+        document.body.append(headerElement, fallbackMessageEl, noteEl);
+    }
 }
 
 async function init() {

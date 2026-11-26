@@ -17,8 +17,10 @@ const mainProcess = "bun";
 // YOU ONLY HAVE TO COMPILE CEF VERSIONS FOR THE STABLE BRANCH FOR LINUX/WINDOWS
 // Do not compile CEF versions for versions using the "cottontail" mainProcess unless
 // you are just messing around with it on your own :)
-
 const useChromeEmbededFramework = false;
+
+// Use backend rework (temporary option until it's finished, then the old one will be retired because MAN IS IT HORRIBLE.)
+const backendRework = false;
 
 export default {
 	app: {
@@ -26,14 +28,18 @@ export default {
 		identifier: "store.playpensoftware.com",
 		version: "1.0.0",
 	},
+	scripts: {
+		postWrap: "./src/scripts/bundleStorelauncher.ts",
+		postPackage: "./src/scripts/bundleStoreLauncher.ts"
+	},
 	build: {
 		mainProcess: mainProcess,
 		cottontail: {
-			entrypoint: "src/bun/index.ts",
+			entrypoint: backendRework ? "src/backend-rework/index.ts" : "src/bun/index.ts",
 			minify: !devMode
 		},
 		bun: {
-			entrypoint: "src/bun/index.ts",
+			entrypoint: backendRework ? "src/backend-rework/index.ts" : "src/bun/index.ts",
 			minify: !devMode
 		},
 		views: {
@@ -54,11 +60,10 @@ export default {
 			"src/updater/updater.html": "views/updater/updater.html"
 		},
 		linux: {
-			bundleCEF: useChromeEmbededFramework,
+			bundleCEF: useChromeEmbededFramework
 		},
 		win: {
-			bundleCEF: useChromeEmbededFramework,
-			icon: "src/build/favicon.ico"
+			bundleCEF: useChromeEmbededFramework
 		},
 	},
 } satisfies ElectrobunConfig;

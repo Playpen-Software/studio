@@ -1,4 +1,6 @@
 #workspace {
+    flex-direction: column;
+
     width: 100%;
     height: 100%;
 
@@ -16,7 +18,10 @@
 
         padding: calc(var(--resting-area-padding) / 2);
 
-        .tabItem {
+        overflow-x: auto;
+        overflow-y: hidden;
+
+        .tabsList-item {
             display: flex;
             flex-direction: row;
             flex: 0 1 160px;
@@ -42,25 +47,12 @@
                 padding: 4px 0 4px 8px;
             }
 
-            &:hover .closeButton {
+            &:hover .close-button {
                 visibility: visible;
             }
 
-            .closeButton {
+            .close-button {
                 visibility: hidden;
-
-                height: 100%;
-                aspect-ratio: 1;
-
-                background: transparent;
-                border: none;
-
-                color: var(--text-primary);
-
-                svg {
-                    height: 100%;
-                    aspect-ratio: 1;
-                }
             }
         }
 
@@ -72,10 +64,117 @@
             border: none;
 
             svg {
-                height: 16px;
+                height: 100%;
                 aspect-ratio: 1;
 
                 fill: var(--text-primary);
+            }
+        }
+    }
+
+    .workarea {
+        display: flex;
+        flex-direction: row;
+        flex: 1;
+        gap: var(--gap);
+
+        #workspace-categoryPanel {
+            display: flex;
+            flex-direction: row;
+            flex: 0.25;
+
+            box-sizing: border-box;
+            height: 100%;
+            min-width: max-content;
+            max-width: 65%;
+            touch-action: none;
+
+            background: var(--background-stack);
+            overflow: hidden;
+
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                gap: var(--gap);
+                flex: 1;
+
+                margin: var(--resting-area-padding);
+
+                #workspace-categoryList {
+                    flex: 1;
+
+                    background: var(--background-base);
+                    border-radius: var(--radius);
+
+                    overflow: auto;
+
+                    #workspace-categoryListHeader th {
+                        border-bottom: 2px solid var(--background-stack);
+                        border-right: 2px solid var(--background-stack);
+                        text-align: left;
+
+                        &:nth-last-of-type {
+                            border-right: none;
+                        }
+                    }
+                }
+
+                .navigation-bar, .manipulation-bar, .pagination-bar {
+                    display: flex;
+                    flex-direction: row;
+                    gap: var(--gap);
+
+                    box-sizing: border-box;
+                    width: 100%;
+
+                    .playpen-primary-button {
+                        padding: 0;
+                    }
+
+                    .playpen-input {
+                        padding: 0 var(--clickable-area-padding-x);
+                    }
+
+                    .pageNumberContainer {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        flex: 1;
+                    }
+                }
+
+                .manipulation-bar .playpen-primary-button, .navigation-bar .playpen-input {
+                    flex: 1;
+                    min-width: 0;
+                    text-wrap: nowrap;
+                }
+            }
+
+            #workspace-categoryPanelResizeHandle {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+
+                width: 5px;
+
+                background: var(--background-stack);
+                border: none;
+                border-radius: 0;
+
+                cursor: ew-resize;
+
+                padding: 0;
+
+                &:hover .handleButton {
+                    visibility: visible;
+                }
+
+                .handleButton {
+                    visibility: hidden;
+
+                    padding: 0;
+                }
             }
         }
     }

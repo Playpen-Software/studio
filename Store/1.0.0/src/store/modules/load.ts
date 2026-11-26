@@ -1,8 +1,7 @@
 import * as settings from './playpenPreferences';
 import * as tabs from './tabs';
-import * as index from './index';
+import * as index from '.';
 import * as spaceFillers from './spaceFillers';
-import * as notifications from './notifications';
 import { initTooltips } from './tooltips';
 
 import { populateSVGs } from "./playpen";
@@ -10,8 +9,6 @@ import { populateSVGs } from "./playpen";
 let delayTimeout: any;
 
 const versionLabel = document.getElementById('load-footer-version') as HTMLSpanElement;
-const exitBtn = document.getElementById('load-exit') as HTMLButtonElement;
-const restartBtn = document.getElementById('load-restart') as HTMLButtonElement;
 const skipDelayBtn = document.getElementById('load-skipDelay') as HTMLButtonElement;
 
 let isFinishing = false;
@@ -40,7 +37,7 @@ async function initialize() {
         loadMenuDelay = settings.preferences['loadMenuDelay'] ?? 750;
     } catch (err) {
         const message = err as string;
-        notifications.showNotification(`Non-Critical Error: Failed to load user preferences: ${message}`, 'warning');
+        console.warn(`Non-Critical Error: Failed to load user preferences: ${message}`);
     }
 
     // Replace SVG Placeholders with SVGs
@@ -51,7 +48,7 @@ async function initialize() {
             await populateSVGs();
         } catch (err) {
             const message = err as string;
-            notifications?.showNotification(`Non-Critical Error: Failed to replace icon placeholders: ${message}`, 'warning');
+            console.warn(`Non-Critical Error: Failed to replace icon placeholders: ${message}`);
         }
     }
 
@@ -85,7 +82,7 @@ async function initialize() {
         });
     } catch (err) {
         const message = err as string;
-        notifications?.showNotification(`Non-Critical Error: Failed to load keyboard navigation fix: ${message}`, 'warning');
+        console.warn(`Non-Critical Error: Failed to load keyboard navigation fix: ${message}`);
     }
 
     // Initialize space filler shapes
@@ -93,11 +90,48 @@ async function initialize() {
         spaceFillers.init();
     } catch (err) {
         const message = err as string;
-        notifications?.showNotification(`Non-Critical Error: Failed to load space filler shapes: ${message}`, 'warning');
+        console.warn(`Non-Critical Error: Failed to load space filler shapes: ${message}`);
+    }
+
+    // Apply hotkey fix
+    try {
+        window.addEventListener('keydown', async (event) => {
+            if (!settings.preferences || !Boolean(settings.preferences['enableHotkeyFix'])) return;
+
+            const key = event.key.toLowerCase();
+            const devToolsCondition = key === 'f12' || (event.shiftKey && event.ctrlKey && key === 'i');
+            const reloadCondition = (event.shiftKey && key === 'r') || key === 'f5';
+
+            if (!devToolsCondition && !reloadCondition) return;
+
+            if (devToolsCondition) {
+                if (index.electroview?.rpc?.send?.toggleDevTools) {
+                    event.preventDefault();
+                    index.electroview.rpc.send.toggleDevTools();
+                } else {
+                    console.warn("DevTools RPC bridge not yet initialized.");
+                }
+            } else if (reloadCondition) {
+                window.location.reload();
+            }
+        });
+    } catch (err) {
+        const error = err as string;
+        console.warn(`Non-Critical Error: Failed to load the hotkey fix event listener: ${error}`);
     }
 
     window.dispatchEvent(new CustomEvent('storeLoaded'));
     console.log('Store has loaded');
+    const timing = performance.getEntriesByType("navigation")[0];
+
+    if (timing) {
+        const navTiming = timing as PerformanceNavigationTiming;
+
+        console.log("Total Page Load Time:", navTiming.loadEventEnd - navTiming.startTime, "ms");
+        console.log("DOM Content Loaded Time:", navTiming.domContentLoadedEventEnd - navTiming.startTime, "ms");
+        console.log("Time to First Byte (TTFB):", navTiming.responseStart - navTiming.startTime, "ms");
+    }
+
     delayTimeout = setTimeout(finishLoading, loadMenuDelay);
     console.log(`Load Delay: ${loadMenuDelay}`);
     skipDelayBtn.classList.remove('hidden');
@@ -105,6 +139,9 @@ async function initialize() {
         clearTimeout(delayTimeout);
         finishLoading();
     });
+
+    window.addEventListener('preferencesUpdate', index.updateDeveloperFunctionExposure);
+    index.updateDeveloperFunctionExposure();
 }
 
 async function finishLoading() {
@@ -116,8 +153,3 @@ async function finishLoading() {
     // DEVELOPING THE WORKSPACE MENU
     tabs.goto('workspace', { logPrevious: false, removePrevious: true });
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    exitBtn?.addEventListener('click', index.exit);
-    restartBtn.addEventListener('click', index.restart);
-});

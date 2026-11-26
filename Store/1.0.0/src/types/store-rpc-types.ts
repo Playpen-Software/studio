@@ -1,16 +1,24 @@
 // @ts-expect-error Electrobun's RPC types are provided by the build toolchain.
 import type { RPCSchema } from "electrobun";
-import type { DatabaseType } from "./store-types";
-import type { 
-    Space, 
-    Category, 
-    Item, 
-    CategoryAttributeInput, 
-    ItemInput, 
-    SupportedVersion, 
-    ChunkCap, 
-    InspectionResult 
+import type {
+    Space,
+    Category,
+    Item,
+    CategoryAttributeInput,
+    ItemInput,
+    SupportedVersion,
+    ChunkCap,
+    InspectionResult,
+    QueryOptions
 } from "../bun/database-driver";
+import type { QueryUnifiedOptions } from "./store-types";
+import type {
+    InventoryDelta,
+    InventoryDeltaResult,
+    InventoryQueueStatus
+} from "./inventory-delta";
+
+export type DatabaseType = 'sqlite' | 'remote';
 
 export type StoreRPCType = {
     bun: RPCSchema<{
@@ -30,6 +38,26 @@ export type StoreRPCType = {
             resetAppData: {
                 params: void;
                 response: void;
+            };
+            applyInventoryDelta: {
+                params: InventoryDelta;
+                response: InventoryDeltaResult;
+            };
+            getInventoryQueueStatus: {
+                params: void;
+                response: InventoryQueueStatus;
+            };
+            setDatabase: {
+                params: { database: DatabaseType; databasePath?: string; remoteUrl?: string };
+                response: void;
+            };
+            getDatabase: {
+                params: void;
+                response: DatabaseType | null;
+            };
+            pingServer: {
+                params: void;
+                response: boolean;
             };
 
             // --- SPACES ---
@@ -51,7 +79,18 @@ export type StoreRPCType = {
                 response: boolean;
             };
             listSpaces: {
-                params: void;
+                params: {
+                    cap?: number;
+                    index?: number;
+                };
+                response: Space[];
+            };
+            querySpaces: {
+                params: {
+                    options?: QueryOptions;
+                    cap?: number;
+                    index?: number;
+                };
                 response: Space[];
             };
             deleteSpace: {
@@ -81,7 +120,20 @@ export type StoreRPCType = {
                 response: boolean;
             };
             listCategories: {
-                params: number | bigint; // spaceId
+                params: {
+                    spaceId: number | bigint;
+                    cap?: number;
+                    index?: number;
+                };
+                response: Category[];
+            };
+            queryCategories: {
+                params: {
+                    spaceId: number | bigint;
+                    options?: QueryOptions;
+                    cap?: number;
+                    index?: number;
+                };
                 response: Category[];
             };
             deleteCategory: {
@@ -93,6 +145,39 @@ export type StoreRPCType = {
             createItem: {
                 params: ItemInput;
                 response: number | bigint;
+            };
+            updateItem: {
+                params: {
+                    id: number | bigint;
+                    updates: {
+                        name?: string;
+                        categoryId?: number | bigint;
+                        reorderPoint?: number;
+                        iconBase64?: string | null;
+                        galleryBase64?: string[];
+                        attributes?: Record<string, string | number | boolean>;
+                    };
+                };
+                response: boolean;
+            };
+            adjustItemQuantity: {
+                params: { id: number | bigint; amount: number };
+                response: boolean;
+            };
+            listItems: {
+                params: {
+                    cap?: number;
+                    index?: number;
+                };
+                response: Item[];
+            };
+            queryItems: {
+                params: {
+                    options?: QueryUnifiedOptions;
+                    cap?: number;
+                    index?: number;
+                };
+                response: Item[];
             };
             getItemById: {
                 params: number | bigint;
@@ -122,40 +207,10 @@ export type StoreRPCType = {
                     importedCategories: number;
                 };
             };
-
-            // --- FILE SYSTEM & CONFIG ---
-            readFile: {
-                params: {
-                    path: string;
-                };
-                response: string;
-            };
-            manageStoreFile: {
-                params: {
-                    operation: 'read' | 'write' | 'list' | 'createDirectory' | 'delete' | 'clearDirectory';
-                    path: string;
-                    content?: string;
-                };
-                response: string | string[] | boolean | null;
-            };
-            setDatabase: {
-                params: {
-                    database: DatabaseType;
-                    databasePath?: string;
-                };
-                response: void;
-            };
-            getDatabase: {
-                params: void;
-                response: DatabaseType | null;
-            };
-            pingServer: {
-                params: void;
-                response: boolean;
-            };
         };
         messages: {
             closeStore: void;
+            toggleDevTools: void;
         };
     }>;
     webview: RPCSchema<{

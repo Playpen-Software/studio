@@ -1,0 +1,12 @@
+Configuration:
+
+Weight: 300
+Grade: 0
+Optical Size: 24
+
+Filter:
+
+Style: Material Symbols (new)
+Rounded
+
+REMOVE ALL WIDTH AND HEIGHT ATTRIBUTES FROM THE SVG FILE.

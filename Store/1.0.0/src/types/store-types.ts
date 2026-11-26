@@ -4,8 +4,6 @@ export type TabOptions = {
     removePrevious?: boolean;
 }
 
-export type DatabaseType = 'sqlite' | 'remote';
-
 export interface Space {
     id: number | bigint;
     name: string;

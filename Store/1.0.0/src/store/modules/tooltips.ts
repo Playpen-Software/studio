@@ -1,6 +1,6 @@
 const triggerSelector = [
+    '.playpen-tooltip-button',
     '.tooltip-button',
-    '.tooltip-support-button',
     '.tooltip-delayed-button',
     '.tooltip-delayed-support-button',
     '.tooltip-support-delayed-button',

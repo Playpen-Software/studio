@@ -85,6 +85,10 @@
 
     z-index: 9998;
 
+    &.oppose-user-theme .popup {
+        background: #f6f6f6;
+    }
+
     &.center {
         position: fixed;
     }

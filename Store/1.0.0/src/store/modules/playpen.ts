@@ -300,7 +300,8 @@ export class ColorPicker {
 }
 
 export class PopupPlacer {
-    private static popupMargin = 5;
+    private static popupMarginX = 5;
+    private static popupMarginY = 0;
     private static cursorX: number | null = null;
     private static cursorY: number | null = null;
 
@@ -319,10 +320,10 @@ export class PopupPlacer {
         const style = getComputedStyle(popup);
         const width = parseFloat(style.width);
         const height = parseFloat(style.height);
-        const minX = this.popupMargin;
-        const minY = this.popupMargin;
-        const maxX = window.innerWidth - width - this.popupMargin;
-        const maxY = window.innerHeight - height - this.popupMargin;
+        const minX = this.popupMarginX;
+        const minY = this.popupMarginY;
+        const maxX = window.innerWidth - width - this.popupMarginX;
+        const maxY = window.innerHeight - height - this.popupMarginY;
 
         if (![width, height, maxX, maxY].every(Number.isFinite) || maxX < minX || maxY < minY) {
             this.fallback(container, popup);
@@ -339,21 +340,21 @@ export class PopupPlacer {
         }
 
         const x = triggerX - width / 2;
-        const y = triggerY + this.popupMargin;
+        const y = triggerY + this.popupMarginY;
 
         const clampX = (val: number) => Math.max(minX, Math.min(val, maxX));
         const clampY = (val: number) => Math.max(minY, Math.min(val, maxY));
 
         const aboveTrigger = triggerRect
-        ? { x: triggerX - width / 2, y: triggerRect.top - height - this.popupMargin }
+        ? { x: triggerX - width / 2, y: triggerRect.top - height - this.popupMarginY }
         : null;
 
         const candidates = [
             { x, y },
             ...(aboveTrigger ? [aboveTrigger] : []),
             ...(triggerRect ? [
-                { x: triggerRect.right + this.popupMargin, y: triggerRect.top + (triggerRect.height - height) / 2 },
-                { x: triggerRect.left - width - this.popupMargin, y: triggerRect.top + (triggerRect.height - height) / 2 }
+                { x: triggerRect.right + this.popupMarginX, y: triggerRect.top + (triggerRect.height - height) / 2 },
+                { x: triggerRect.left - width - this.popupMarginX, y: triggerRect.top + (triggerRect.height - height) / 2 }
             ] : [])
         ];
 

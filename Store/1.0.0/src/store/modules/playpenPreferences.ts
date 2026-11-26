@@ -1,7 +1,7 @@
-import { electroview } from './index';
+import { electroview } from '.';
 import { init as initPlaypenLib } from './playpen';
 
-const defaultPreferences: Record<string, unknown> = { themeVariables: {} };
+const defaultPreferences: Record<string, unknown> = {};
 
 export interface preferenceUpdateEventDetail {
     preference: string;
@@ -9,18 +9,28 @@ export interface preferenceUpdateEventDetail {
 
 let currentPreferences: Record<string, unknown> = { ...defaultPreferences };
 export let preferences: Readonly<Record<string, any>> = Object.freeze({ ...currentPreferences });
-let preferenceWrite: Promise<void> = Promise.resolve();
+
+let pendingDeltaQueue: Record<string, unknown>[] = [];
+let isWriting = false;
 let settingsInputsInitialized = false;
 
 export async function init(): Promise<void> {
-    registerInputPreferences();
+    validatePreferenceInputs();
     const saved = await electroview.rpc?.request.getPreferences();
     currentPreferences = { ...defaultPreferences, ...saved };
     publishPreferences();
 
     initSettingsInputs();
-    applySettings();
     initPlaypenLib();
+}
+
+export function registerPreferenceDefaults(defaults: Record<string, unknown>): void {
+    for (const [key, value] of Object.entries(defaults)) {
+        if (key in defaultPreferences && !Object.is(defaultPreferences[key], value)) {
+            throw new Error(`Preference "${key}" has conflicting default values.`);
+        }
+        defaultPreferences[key] = value;
+    }
 }
 
 export function getPreference(key: string): unknown;
@@ -35,69 +45,55 @@ export async function setPreference(key: string, value: unknown): Promise<void> 
 }
 
 export async function setPreferences(updates: Record<string, unknown>): Promise<void> {
-    for (const [key, value] of Object.entries(updates)) {
-        if (!(key in currentPreferences)) throw new Error(`Unknown preference: ${key}`);
-        const existing = currentPreferences[key];
-        if (value !== undefined && typeof value !== typeof existing) {
-            throw new Error(`Preference "${key}" must be a ${typeof existing}.`);
-        }
-    }
-
     currentPreferences = { ...currentPreferences, ...updates };
     publishPreferences();
-    applySettings();
     Object.keys(updates).forEach(notifyPreferencesUpdate);
 
-    const snapshot = { ...currentPreferences };
-    const write = preferenceWrite.then(async () => {
-        const saved = await electroview.rpc?.request.setPreferences(snapshot);
-        if (saved !== true) throw new Error(`Failed to save preferences: ${Object.keys(updates).join(', ')}.`);
-    });
-    preferenceWrite = write.catch(() => undefined);
-    await write;
+    pendingDeltaQueue.push(updates);
+
+    await processQueue();
+}
+
+async function processQueue(): Promise<void> {
+    if (isWriting || pendingDeltaQueue.length === 0) return;
+
+    isWriting = true;
+
+    try {
+        while (pendingDeltaQueue.length > 0) {
+            const batchUpdates = Object.assign({}, ...pendingDeltaQueue);
+            pendingDeltaQueue = [];
+
+            currentPreferences = { ...currentPreferences, ...batchUpdates };
+            const snapshot = { ...currentPreferences };
+
+            const saved = await electroview.rpc?.request.setPreferences(snapshot);
+            if (saved !== true) {
+                throw new Error(`Failed to save preferences batch.`);
+            }
+        }
+    } catch (error) {
+        console.error("Preference queue write error:", error);
+    } finally {
+        isWriting = false;
+        if (pendingDeltaQueue.length > 0) {
+            void processQueue();
+        }
+    }
 }
 
 function publishPreferences(): void {
     preferences = Object.freeze({ ...currentPreferences });
 }
 
-function registerInputPreferences(): void {
+function validatePreferenceInputs(): void {
     for (const input of document.querySelectorAll<HTMLInputElement>('input[data-preferences-key]')) {
         const key = input.dataset['preferencesKey'];
-        const rawDefault = input.dataset['preferenceDefault'];
         if (!key) throw new Error('A preference input is missing its data-preferences-key.');
-        if (rawDefault === undefined) {
-            throw new Error(`Preference input "${key}" is missing data-preference-default.`);
+        if (!(key in defaultPreferences)) {
+            throw new Error(`Preference input "${key}" has no registered default value.`);
         }
-
-        const value = parseDefaultValue(input, key, rawDefault);
-        if (key in defaultPreferences && !Object.is(defaultPreferences[key], value)) {
-            throw new Error(`Preference "${key}" has conflicting default values.`);
-        }
-        defaultPreferences[key] = value;
     }
-}
-
-function parseDefaultValue(input: HTMLInputElement, key: string, value: string): unknown {
-    if (input.type === 'checkbox') {
-        if (value !== 'true' && value !== 'false') {
-            throw new Error(`The default value for checkbox preference "${key}" must be "true" or "false".`);
-        }
-        return value === 'true';
-    }
-
-    if (input.type === 'number' || input.type === 'range') {
-        if (value.trim() === '') {
-            throw new Error(`The default value for numeric preference "${key}" cannot be empty.`);
-        }
-        const number = Number(value);
-        if (!Number.isFinite(number)) {
-            throw new Error(`The default value for numeric preference "${key}" must be a finite number.`);
-        }
-        return number;
-    }
-
-    return value;
 }
 
 function initSettingsInputs(): void {
@@ -113,8 +109,8 @@ function initSettingsInputs(): void {
                 ? input.checked
                 : input.type === 'number' ? input.valueAsNumber : input.value;
             if (typeof value === 'number' && Number.isNaN(value)) return;
-            const update = setPreference(key, value);
-            void update.catch(error => {
+
+            void setPreference(key, value).catch(error => {
                 console.error(`Failed to save preference ${key}:`, error);
             });
         };
@@ -141,28 +137,22 @@ function syncPreferenceInput(input: HTMLInputElement, key: string): void {
 }
 
 export async function resetPreferences(): Promise<void> {
-    const snapshot = { ...defaultPreferences };
-    const write = preferenceWrite.then(async () => {
-        if (await electroview.rpc?.request.setPreferences(snapshot) !== true) {
-            throw new Error('Failed to reset preferences.');
-        }
-        currentPreferences = snapshot;
-        publishPreferences();
-        applySettings();
-        Object.keys(defaultPreferences).forEach(notifyPreferencesUpdate);
-        document.querySelectorAll<HTMLInputElement>('input[data-preferences-key]').forEach(input => {
-            const key = input.dataset['preferencesKey'];
-            if (key) syncPreferenceInput(input, key);
-        });
-    });
-    preferenceWrite = write.catch(() => undefined);
-    await write;
-    initPlaypenLib();
-}
+    pendingDeltaQueue = [];
 
-function applySettings(): void {
-    const style = document.documentElement.style;
-    if (!preferences['transitionAnimations']) style.setProperty('--transition-speed', '0s');
+    const snapshot = { ...defaultPreferences };
+    const saved = await electroview.rpc?.request.setPreferences(snapshot);
+    if (saved !== true) {
+        throw new Error('Failed to reset preferences.');
+    }
+
+    currentPreferences = snapshot;
+    publishPreferences();
+    Object.keys(defaultPreferences).forEach(notifyPreferencesUpdate);
+    document.querySelectorAll<HTMLInputElement>('input[data-preferences-key]').forEach(input => {
+        const key = input.dataset['preferencesKey'];
+        if (key) syncPreferenceInput(input, key);
+    });
+    initPlaypenLib();
 }
 
 function notifyPreferencesUpdate(preference: string): void {

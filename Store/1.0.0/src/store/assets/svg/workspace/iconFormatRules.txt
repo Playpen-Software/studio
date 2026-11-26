@@ -1,0 +1,7 @@
+Manipulation Buttons:
+
+Weight: 200
+Grade: 0
+Optical Size: 24
+
+REMOVE ALL WIDTH, HEIGHT ATTRIBUTES FROM THE SVG FILE.

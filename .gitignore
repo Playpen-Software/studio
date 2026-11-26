@@ -3,6 +3,7 @@ node_modules/
 
 # Build outputs
 dist/
+binaries/
 
 # Executables and binary packages
 *.exe

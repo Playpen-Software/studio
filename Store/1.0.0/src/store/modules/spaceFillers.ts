@@ -45,7 +45,6 @@ let lastCombinationIndex: number | null = null;
 const floatAnimations = ['float', 'float-slow', 'float-fast', 'float-subtle'];
 
 export async function fillSpaceContainer() {
-    console.log(getActiveTab());
     const disabledInTabs = preferences['spaceFillersDisabledTabs'] || [];
     const callId = ++currentCallId;
     const container = document.getElementById('space-filler-container') as HTMLDivElement;

@@ -1,7 +1,8 @@
 import { showNotification, showPopup } from '../notifications';
-import { electroview } from '../index';
+import { electroview } from '..';
 import { resetThemeSettings } from '../themeEditor';
 import { resetPreferences } from '../playpenPreferences';
+import { clearInventoryDeltas } from '../inventoryQueue';
 
 let tabInitialized = false;
 
@@ -9,6 +10,7 @@ async function resetInventory(): Promise<void> {
     try {
         if (!electroview.rpc?.request.resetInventory) throw new Error('The inventory reset service is unavailable.');
         await electroview.rpc.request.resetInventory();
+        clearInventoryDeltas();
         showNotification('The connected database inventory has been reset.');
     } catch (error) {
         console.error('Failed to reset the connected database inventory:', error);
@@ -50,7 +52,10 @@ async function chooseResetAction(): Promise<void> {
             { content: 'Theme', value: 'theme' },
             { content: 'Inventory', value: 'inventory' },
             { content: 'Cancel', value: undefined, highlighted: true }
-        ]
+        ],
+        undefined,
+        undefined,
+        true
     );
     if (!option || option === 'cancel') return;
 
@@ -69,6 +74,7 @@ async function chooseResetAction(): Promise<void> {
             { content: 'Reset', value: true }
         ],
         undefined,
+        true,
         true
     );
     if (!confirmation) return;

@@ -167,8 +167,6 @@ async function gotoNow(id: string, options: TabOptions = {}): Promise<void> {
         return;
     }
 
-    console.log(`[PLAYPEN TABS] Navigating to tab: "${id}"`);
-
     let tabsHidden = 0;
     let lastHiddenTab: NavigationHistoryItem | undefined;
 
@@ -241,6 +239,14 @@ export async function hide(id: string, options: TabOptions = {}): Promise<void> 
 
     thisElement.style.display = "none";
     thisElement.classList.remove('is-fading-out');
+}
+
+export async function hideAllTabs(options?: TabOptions) {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function (tab) {
+        const tabId = tab.id;
+        hide(tabId, options);
+    });
 }
 
 export async function show(id: string, options: TabOptions = {}): Promise<void> {

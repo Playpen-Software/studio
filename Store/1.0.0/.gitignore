@@ -4,3 +4,6 @@ artifacts/
 *.tsbuildinfo
 .cottontail-tmp/
 .hutch/
+.vs/
+x64/
+x86/

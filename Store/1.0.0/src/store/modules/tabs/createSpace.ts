@@ -1,7 +1,7 @@
 import * as tabs from '../tabs';
 
-import { electroview } from '../index';
 import type { tabChangeEventDetail } from '../../../types/store-types';
+import { enqueueInventoryDelta } from '../inventoryQueue';
 
 const randomSpaceNames = [
     'Warehouse', 'Workshop', 'Studio', 'Pantry', 'Archive',
@@ -54,8 +54,16 @@ export function createRandomSpace(): Promise<{ name: string; id: number | bigint
     const name = randomSpaceNames[Math.floor(Math.random() * randomSpaceNames.length)];
     const imageBase64 = randomSpaceIcons[Math.floor(Math.random() * randomSpaceIcons.length)];
     if (!name || !imageBase64) throw new Error('Random space presets are unavailable.');
-    return electroview.rpc!.request.createSpace({ name, imageBase64 })
-        .then((id: number | bigint) => ({ name, id }));
+    return enqueueInventoryDelta({
+        entity: 'space',
+        action: 'create',
+        data: { name, imageBase64 }
+    }).then(result => {
+        if (result.status === 'stale' || (typeof result.value !== 'number' && typeof result.value !== 'bigint')) {
+            throw new Error('The database did not create the space.');
+        }
+        return { name, id: result.value };
+    });
 }
 
 export async function init() {
@@ -70,7 +78,12 @@ export async function init() {
         };
         try {
             continueBtn.disabled = true;
-            await electroview.rpc!.request.createSpace({ name, imageBase64: selectedIcon });
+            const result = await enqueueInventoryDelta({
+                entity: 'space',
+                action: 'create',
+                data: { name, imageBase64: selectedIcon }
+            });
+            if (result.status === 'stale') throw new Error('The space creation delta was rejected as stale.');
             tabs.goto('previous');
             errorOutput.innerText = '';
             nameInput.value = '';
